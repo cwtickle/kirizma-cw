@@ -24,13 +24,33 @@ g_rootObj.arrowMotion_data = `
 `;
 
 // キリズマ用文字定義
-const C_KIRIZMA_ROMAJI_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ '.split('')
-const C_KIRIZMA_ROMAJI_EXCHARS = 'ちこそしいはきくにまのりもみらせたすとかなひてさんつ　'.split('')
-const C_KIRIZMA_KANA_CHARS = 'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん　'.split('')
-const C_KIRIZMA_KANA_EXCHARS = '3E456TGH:BXDRPCQAZWSUI1<KFV2^-JN]?M789OL>+_00Y '.split('')
+const g_kirizmaChars = {
+	romaji: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),
+	romajiEx: 'ちこそしいはきくにまのりもみらせたすとかなひてさんつ'.split(''),
+
+	romaji_num: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 '.split(''),
+	romaji_numEx: 'ちこそしいはきくにまのりもみらせたすとかなひてさんつわぬふあうえおやゆよ　'.split(''),
+
+	kana: 'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん'.split(''),
+	kanaEx: '3E456TGH:BXDRPCQAZWSUI1<KFV2^-JN]?M789OL>+_00Y'.split(''),
+
+	kana_num: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 '.split(''),
+	kana_numEx: '3E456TGH:BXDRPCQAZWSUI1<KFV2^-JN]?M789OL>+_00Yわぬふあうえおやゆよ '.split(''),
+
+	kana_alphabet: 'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんABCDEFGHIJKLMNOPQRSTUVWXYZ　'.split(''),
+	kana_alphabetEx: '3E456TGH:BXDRPCQAZWSUI1<KFV2^-JN]?M789OL>+_00Yちこそしいはきくにまのりもみらせたすとかなひてさんつ '.split(''),
+
+	kana_alphabet_num: 'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789　'.split(''),
+	kana_alphabet_numEx: '3E456TGH:BXDRPCQAZWSUI1<KFV2^-JN]?M789OL>+_00Yちこそしいはきくにまのりもみらせたすとかなひてさんつわぬふあうえおやゆよ '.split(''),
+};
+
 const crType = {
-	kana: { char: C_KIRIZMA_KANA_CHARS, exchar: C_KIRIZMA_KANA_EXCHARS },
-	romaji: { char: C_KIRIZMA_ROMAJI_CHARS, exchar: C_KIRIZMA_ROMAJI_EXCHARS },
+	k26: { char: g_kirizmaChars.romaji, exchar: g_kirizmaChars.romajiEx },
+	k36: { char: g_kirizmaChars.romaji_num, exchar: g_kirizmaChars.romaji_numEx },
+	k46: { char: g_kirizmaChars.kana, exchar: g_kirizmaChars.kanaEx },
+	k56: { char: g_kirizmaChars.kana_num, exchar: g_kirizmaChars.kana_numEx },
+	k72: { char: g_kirizmaChars.kana_alphabet, exchar: g_kirizmaChars.kana_alphabetEx },
+	k82: { char: g_kirizmaChars.kana_alphabet_num, exchar: g_kirizmaChars.kana_alphabet_numEx },
 };
 
 // キリズマの移動量設定（変更不可）
@@ -194,7 +214,9 @@ function kstyleMainInit() {
 			'-1': { x: 530, y: 230 },
 		};
 
-		g_workObj.charFlg = (g_workObj.stepRtn.length >= 47 ? `kana` : `romaji`);
+		const keyCtrlPtn = `${g_keyObj.currentKey}_${g_keyObj.currentPtn}`;
+		const kirizmaNum = g_keyObj[`color${keyCtrlPtn}`].filter(val => val === 0).length;
+		g_workObj.charFlg = `k${kirizmaNum}`;
 
 		// mainSpriteを90度回転させて移動方向を変更
 		mainSprite.style.transform = `rotate(-90deg)`;
@@ -258,19 +280,19 @@ function kstyleMainEnterFrame() {
 				// 補助表示OFF時
 				const kirizmaChara = document.createElement('div');
 				kirizmaChara.className = 'kirizma_chara';
-				kirizmaChara.innerText = crType[g_workObj.charFlg].char[arrowNum];
+				kirizmaChara.innerText = crType[g_workObj.charFlg].char[arrowNum] ?? ``;
 				c.appendChild(kirizmaChara);
 			} else {
 				// 補助表示ON時のメイン文字
 				const kirizmaChara = document.createElement('div');
 				kirizmaChara.className = 'kirizma_assist_chara';
-				kirizmaChara.innerText = crType[g_workObj.charFlg].char[arrowNum];
+				kirizmaChara.innerText = crType[g_workObj.charFlg].char[arrowNum] ?? ``;
 				c.appendChild(kirizmaChara);
 
 				// 補助表示ON時の追加文字
 				const kirizmaExChara = document.createElement('div');
 				kirizmaExChara.className = 'kirizma_assist_exchara';
-				kirizmaExChara.innerText = crType[g_workObj.charFlg].exchar[arrowNum];
+				kirizmaExChara.innerText = crType[g_workObj.charFlg].exchar[arrowNum] ?? ``;
 				c.appendChild(kirizmaExChara);
 			}
 		}
@@ -288,7 +310,9 @@ g_customJsObj.mainEnterFrame.push(kstyleMainEnterFrame);
 function kstyleKeyConfigInit() {
 	if (g_keyObj.currentKey.endsWith(`k`)) {
 		const keyCtrlPtn = `${g_keyObj.currentKey}_${g_keyObj.currentPtn}`;
-		g_workObj.charFlg = (g_keyObj[`color${keyCtrlPtn}`].length >= 47 ? `kana` : `romaji`);
+		const kirizmaNum = g_keyObj[`color${keyCtrlPtn}`].filter(val => val === 0).length;
+		g_workObj.charFlg = `k${kirizmaNum}`;
+
 		crType[g_workObj.charFlg].char.forEach((c, i) => {
 			const kirizmaChara = document.createElement('div');
 			kirizmaChara.className = 'kirizma_chara_key';
