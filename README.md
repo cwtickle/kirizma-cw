@@ -15,10 +15,11 @@ Kirizma (CW Edition)では、Dancing☆Onigiri (CW Edition)の基盤を利用し
 ⇒使い方によっては、下段を5key以外にすることも可能です。
 
 ## Usage / 使い方
-- Dancing☆Onigiri (CW Edition)のフォルダ階層を基本に、リポジトリにあるファイルを上書きして使います。
+- Dancing☆Onigiri (CW Edition)のフォルダ階層に、リポジトリにあるファイルを上書きして使います。
    - kstyle.js  をjs フォルダへ
    - kstyle.css をcssフォルダへ
-   - key_kirizma.txt の内容を danoni_setting.js の g_presetObj.keysData へ追加
+   - img/kirizma フォルダ一式をimgフォルダへ
+   - danoni_setting.js の g_presetObj.keysData へキリズマ用のキー定義を追加
 ```javascript
       g_presetObj.keysData=`
 
