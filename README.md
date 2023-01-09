@@ -2,7 +2,8 @@
 - ⌨Kirizma - Typing rhythm game based on Dancing Onigiri "CW Edition"
 
 キリズマは、[D4U](http://noia.g3.xrea.com/)さんが考案したブラウザで動作するタイピングゲーム風の音楽ゲームです。  
-Kirizma (CW Edition)では、Dancing☆Onigiri (CW Edition)の基盤を利用してキリズマを再現しています。
+Kirizma (CW Edition)では、Dancing☆Onigiri (CW Edition)の基盤を利用してキリズマを再現しています。  
+[SKB](https://github.com/superkuppabros)さん・[すずめ](https://github.com/suzme)さんが作成したカスタムjs/cssをベースに、機能追加を行ったものを公開しています。
 
 ## Specification / 特記事項
 - ローマ字モードに限り、Displayオプションで文字の一部切替が可能です。  
