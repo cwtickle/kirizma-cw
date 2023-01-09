@@ -1,0 +1,110 @@
+﻿@charset "UTF-8";
+/* ----------------------------------------
+  Kirizma
+  カスタムcssファイル
+
+  Created : 2022/09/17
+  Revised : 2022/09/22
+  Source Version: Ver 1.2.1
+------------------------------------------ */
+
+/* 判定時に動いてしまうためimportantが必要 */
+div[id^="stepHit"] {
+  top: -10px !important;
+}
+
+/*
+  キリズマ用ノーツ
+  arrowMotion_dataでこのクラス名を設定
+*/
+.blocks {
+  border: 2px solid #222222;
+}
+
+/* 補助表示OFF時の文字部分 */
+.kirizma_chara,
+.kirizma_chara_key {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: auto;
+  font-size: 42px;
+  font-weight: bold;
+  color: navy;
+}
+
+.kirizma_chara {
+  transform: rotate(90deg);
+}
+
+/* 補助表示ON時のメイン文字 */
+.kirizma_assist_chara {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  /* 下にローマ字表示するために上寄せ */
+  align-items: center;
+  margin: auto;
+  font-size: 28px;
+  font-weight: bold;
+  color: navy;
+  transform: rotate(90deg);
+}
+
+/* 補助表示ON時の追加文字部分 */
+.kirizma_assist_exchara {
+  position: absolute;
+  top: 0px;
+  left: -26px;
+  width: 47.5px;
+  height: 47.5px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  color: #666666;
+  transform: rotate(90deg);
+}
+
+.lyric {
+  font-size: 22px;
+  color: #FFFFFF;
+}
+
+@keyframes lyricin1 {
+  0% {
+    opacity: 0.0;
+    transform: translateY(+27px);
+  }
+
+  100% {
+    opacity: 0.5;
+    transform: translateY(0px);
+  }
+}
+
+@keyframes lyricin2 {
+  0% {
+    opacity: 0.5;
+    transform: translateY(+27px);
+  }
+
+  100% {
+    opacity: 1.0;
+    transform: translateY(0px);
+  }
+}
+
+@keyframes lyricout {
+  0% {
+    opacity: 1.0;
+    transform: translateY(0px);
+  }
+
+  100% {
+    opacity: 0.0;
+    transform: translateY(-27px);
+  }
+}
