@@ -21,12 +21,12 @@ Kirizma (CW Edition)では、Dancing☆Onigiri (CW Edition)の基盤を利用し
    - img/kirizma フォルダ一式をimgフォルダへ
    - danoni_setting.js の g_presetObj.keysData へキリズマ用のキー定義を追加
 ```javascript
-      g_presetObj.keysData=`
+g_presetObj.keysData=`
 
-      |keyExtraList=27k,47k,31k,51k|  <- すでに追加しているカスタムキーがあればそれも足します
-        (カスタムキー定義の内容をコピー)
+|keyExtraList=27k,47k,31k,51k|  <- すでに追加しているカスタムキーがあればそれも足します
+(カスタムキー定義の内容をコピー)
 
-      `;
+`;
 ```
 
 ### 譜面ファイル側で設定する譜面ヘッダー（一例）
