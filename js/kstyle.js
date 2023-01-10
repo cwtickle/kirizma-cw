@@ -5,9 +5,9 @@
  * 
  * Created: 2022/09/17
  * Revised: 2023/01/10
- * Source Version: Ver 1.4.0
+ * Source Version: Ver 1.4.1
  */
-const g_kirizmaVersion = `Ver 1.4.0`;
+const g_kirizmaVersion = `Ver 1.4.1`;
 
 // 初期設定定義
 g_lblNameObj.dancing = `KIRI`;
@@ -231,7 +231,7 @@ function kstyleMainInit() {
 		};
 
 		const keyCtrlPtn = `${g_keyObj.currentKey}_${g_keyObj.currentPtn}`;
-		const kirizmaNum = g_keyObj[`color${keyCtrlPtn}`].filter(val => val === 0).length;
+		const kirizmaNum = g_keyObj[`color${keyCtrlPtn}_0d`].filter(val => val === 0).length;
 		g_workObj.charFlg = `k${kirizmaNum}`;
 
 		// mainSpriteを90度回転させて移動方向を変更
@@ -326,7 +326,7 @@ g_customJsObj.mainEnterFrame.push(kstyleMainEnterFrame);
 function kstyleKeyConfigInit() {
 	if (g_keyObj.currentKey.endsWith(`k`)) {
 		const keyCtrlPtn = `${g_keyObj.currentKey}_${g_keyObj.currentPtn}`;
-		const kirizmaNum = g_keyObj[`color${keyCtrlPtn}`].filter(val => val === 0).length;
+		const kirizmaNum = g_keyObj[`color${keyCtrlPtn}_0d`].filter(val => val === 0).length;
 		g_workObj.charFlg = `k${kirizmaNum}`;
 
 		crType[g_workObj.charFlg].char.forEach((c, i) => {
