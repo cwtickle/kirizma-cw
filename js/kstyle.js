@@ -16,6 +16,8 @@ g_lblNameObj.onigiri = `ZMA`;
 g_rootObj.arrowEffectUse = `false,ON`;
 g_rootObj.specialUse = `true,OFF`;
 g_rootObj.imgType = `kirizma,svg,true,0`;
+g_rootObj.arrowJdgY = -10;
+g_rootObj.frzJdgY = -50;
 
 // 矢印モーション初期定義
 g_rootObj.arrowMotion_data = `
