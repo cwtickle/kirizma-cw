@@ -4,9 +4,10 @@
  * [for Kirizma]
  * 
  * Created: 2022/09/17
- * Revised: 2022/09/23
- * Source Version: Ver 1.3.2
+ * Revised: 2023/01/10
+ * Source Version: Ver 1.4.0
  */
+const g_kirizmaVersion = `Ver 1.4.0`;
 
 // 初期設定定義
 g_lblNameObj.dancing = `KIRI`;
@@ -92,6 +93,19 @@ function kstylePreTitleInit() {
 }
 g_customJsObj.preTitle.push(kstylePreTitleInit);
 
+/**
+ * タイトル画面の割込み処理
+ */
+function kstyleTitleInit() {
+
+	// キリズマ拡張クレジット
+	multiAppend(divRoot,
+		createCss2Button(`lnkCreditK`, `Kirizma(cw) ${g_kirizmaVersion}`, _ => openLink(`https://github.com/cwtickle/kirizma-cw`), {
+			x: g_sWidth - 175, y: 0, w: 175, h: 20, siz: 12, align: C_ALIGN_RIGHT,
+		}, g_cssObj.button_Back),
+	);
+}
+g_customJsObj.title.push(kstyleTitleInit);
 
 /**
  * ディスプレイ設定画面の割込み処理
