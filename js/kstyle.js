@@ -26,6 +26,11 @@ g_rootObj.arrowMotion_data = `
 0,21,blocks,blocks
 `;
 
+g_rootObj.frzTopMotion_data = `
+0,20,fblocks,fblocks
+0,21,fblocks,fblocks
+`;
+
 // キリズマ用文字定義
 const g_kirizmaChars = {
 	romaji: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),
@@ -258,9 +263,10 @@ function kstyleMainInit() {
 			if (document.getElementById(`stepRoot${i}`)) {
 				document.getElementById(`stepRoot${i}`).style.left = `${pos[g_workObj.scrollDir[i]].y}px`;
 				document.getElementById(`stepRoot${i}`).style.top = `${pos[g_workObj.scrollDir[i]].x}px`;
+
+				document.getElementById(`frzHit${i}`).style.left = `${pos[g_workObj.scrollDir[i]].y}px`;
+				document.getElementById(`frzHit${i}`).style.top = `${pos[g_workObj.scrollDir[i]].x}px`;
 			}
-			// そのままだと表示が横向きになるため、90度回転させる
-			//g_workObj.arrowRtn[i] = `c:90`;
 			g_workObj.stepX[i] = pos[g_workObj.scrollDir[i]].y;
 		}
 
@@ -283,11 +289,12 @@ g_customJsObj.main.push(kstyleMainInit);
 function kstyleMainEnterFrame() {
 
 	const attributeName = 'overlay_character';
-	const pattern = /arrow(?<arrowNum>\d+)_(\d+)/;
+	const arrowPattern = /arrow(?<arrowNum>\d+)_(\d+)/;
+	const frzPattern = /frzTop(?<arrowNum>\d+)_(\d+)/;
 
-	const putCharOnBlock = (block) => {
+	const putCharOnBlock = (block, pattern) => {
 		if (!block.hasAttribute(attributeName)) {
-			const c = block.childNodes[0];
+			const c = block.childNodes[0] || block;
 			block.setAttribute(attributeName, true);
 			const id = block.id;
 			const arrowNum = pattern.exec(id).groups.arrowNum;
@@ -314,7 +321,8 @@ function kstyleMainEnterFrame() {
 		}
 	}
 
-	Array.from(document.getElementsByClassName('blocks')).forEach(b => putCharOnBlock(b));
+	Array.from(document.getElementsByClassName('blocks')).forEach(b => putCharOnBlock(b, arrowPattern));
+	Array.from(document.getElementsByClassName('fblocks')).forEach(b => putCharOnBlock(b, frzPattern));
 }
 g_customJsObj.mainEnterFrame.push(kstyleMainEnterFrame);
 
