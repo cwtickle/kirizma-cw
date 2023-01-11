@@ -5,9 +5,9 @@
  *
  * Source by tickle
  * Created : 2020/03/22
- * Revised : https://github.com/cwtickle/kirizma-cw
+ * Revised : 2023/01/11 (v1.5.0)
  *
- * https://github.com/cwtickle/danoniplus
+ * https://github.com/cwtickle/kirizma-cw
  */
 
 function loadBinary() {
