@@ -5,7 +5,7 @@
  *
  * Source by tickle
  * Created : 2020/03/22
- * Revised : 2023/01/11 (v1.5.0)
+ * Revised : 2023/01/11 (v1.5.1)
  *
  * https://github.com/cwtickle/kirizma-cw
  */
