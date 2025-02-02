@@ -8,11 +8,6 @@
   Source Version: Ver 1.5.1
 ------------------------------------------ */
 
-/* 判定時に動いてしまうためimportantが必要 */
-div[id^="stepHit"] {
-  top: -10px !important;
-}
-
 /*
   キリズマ用ノーツ
   arrowMotion_data, frzTopMotion_dataでこのクラス名を設定

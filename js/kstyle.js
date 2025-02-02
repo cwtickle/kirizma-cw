@@ -73,6 +73,10 @@ g_stateObj.FtoH = C_FLG_OFF;
 g_stateObj.RtoL = C_FLG_OFF;
 g_stateObj.NtoX = C_FLG_OFF;  // 未対応
 
+// ダンおにが利用するレーン設定
+g_stateObj._danoniDfLayer = 4;
+g_stateObj._danoniRvLayer = 5;
+
 /**
  * タイトル画面前の割込み処理（初回譜面読込後）
  * 
@@ -97,6 +101,11 @@ function kstylePreTitleInit() {
 	g_posObj.distY = DIST_KIRIZMA - C_STEP_Y + g_posObj.stepYR;
 	g_posObj.reverseStepY = g_posObj.distY - g_posObj.stepY - g_posObj.stepDiffY - C_ARW_WIDTH;
 	g_posObj.arrowHeight = DIST_KIRIZMA + g_posObj.stepYR - g_posObj.stepDiffY * 2;
+
+	// キリズマで扱えない機能を無効化
+	g_headerObj.effectUse = false;
+	g_headerObj.camoufrageUse = false;
+	g_headerObj.swappingUse = false;
 }
 g_customJsObj.preTitle.push(kstylePreTitleInit);
 
@@ -220,6 +229,29 @@ function kstylePreloading() {
 g_customJsObj.preloading.push(kstylePreloading);
 
 /**
+ * プレイ開始前の割り込み処理
+ * - キリズマ以外のデータが存在する場合の振り分け処理
+ */
+function kstyleLoading() {
+
+	// 全てのレーン数 ＞ キリズマ側のレーン数なら矢印があると見做す
+	const keyNumMax = g_workObj.stepRtn.filter(val => val === `c`).length;
+	if (g_workObj.stepRtn.length > keyNumMax) {
+
+		// 矢印側はdividePosを4以上に設定する
+		// StepArea: X-FlowerがdividePosが3以下を利用するため、0～3はキリズマレーンとする
+		g_stateObj.layerNum = 6;
+		g_workObj.stepRtn.forEach((val, j) => {
+			if (val !== `c`) {
+				g_workObj.dividePos[j] = (g_workObj.scrollDir[j] === 1 ?
+					g_stateObj._danoniDfLayer : g_stateObj._danoniRvLayer);
+			}
+		})
+	}
+}
+g_customJsObj.loading.push(kstyleLoading);
+
+/**
  * プレイ画面初期化部分の割込み処理
  * 
  * - キリズマ譜面は矢印描画エリア(mainSprite, stepRoot)を-90度回転させる
@@ -242,25 +274,19 @@ function kstyleMainInit() {
 		g_workObj.charFlg = `k${kirizmaNum}`;
 
 		// mainSpriteを90度回転させて移動方向を変更
-		mainSprite.style.transform = `rotate(-90deg)`;
-		mainSprite.style.left = `-80px`;
-		mainSprite.style.top = `-100px`;
-
-		// 矢印部分（本体）に対してオブジェクト(arrowSprite)を再回転
-		const rerotateFlow = _num => {
-			const scdir = g_workObj.dividePos[_num];
-			const id = document.getElementById(`arrowSprite${scdir}`);
-			id.style.transform = `rotate(90deg)`;
-			id.style.left = `${(scdir === 1 ? 0 : (g_sHeight - DIST_KIRIZMA)) - 10}px`;
-			id.style.top = `0px`;
-		};
+		for (let j = 0; j < Math.min(g_stateObj.layerNum, 4); j++) {
+			$id(`mainSprite${j}`).transform = `rotate(-90deg)`;
+			$id(`mainSprite${j}`).left = `0px`;
+			$id(`mainSprite${j}`).top = `-180px`;
+		}
+		// キリズマは通常より長いスクロール長のため、
+		// ダンおにが使うReverseに合わせて位置を調整
+		if (g_stateObj.layerNum > 4) {
+			$id(`mainSprite${g_stateObj._danoniRvLayer}`).top = `${g_headerObj.playingHeight - DIST_KIRIZMA}px`;
+		}
 
 		// 全てのレーン数 ＞ キリズマ側のレーン数なら矢印側のオブジェクトを回転
 		const keyNumMax = g_workObj.stepRtn.filter(val => val === `c`).length;
-		if (g_workObj.stepRtn.length > keyNumMax) {
-			rerotateFlow(keyNumMax);
-		}
-
 		for (let i = 0; i < keyNumMax; i++) {
 			if (document.getElementById(`stepRoot${i}`)) {
 				document.getElementById(`stepRoot${i}`).style.left = `${pos[g_workObj.scrollDir[i]].y}px`;
@@ -270,15 +296,6 @@ function kstyleMainInit() {
 				document.getElementById(`frzHit${i}`).style.top = `${pos[g_workObj.scrollDir[i]].x}px`;
 			}
 			g_workObj.stepX[i] = pos[g_workObj.scrollDir[i]].y;
-		}
-
-		// 矢印部分（ステップゾーン）に対してオブジェクト(stepRoot)を再回転
-		for (let i = keyNumMax; i < g_workObj.arrowRtn.length; i++) {
-			const id = document.getElementById(`stepRoot${i}`);
-			const scdir = g_workObj.dividePos[i];
-			id.style.transform = `rotate(90deg)`;
-			id.style.left = `${scdir === 1 ? 120 : g_sHeight - 85}px`;
-			id.style.top = `${g_workObj.stepX[i] - C_ARW_WIDTH}px`;
 		}
 	}
 }
@@ -353,3 +370,121 @@ function kstyleKeyConfigInit() {
 	}
 }
 g_customJsObj.keyconfig.push(kstyleKeyConfigInit);
+
+// カスタムキー定義
+g_presetObj.keysDataLib.push(`
+
+|chara27k=keyA,keyB,keyC,keyD,keyE,keyF,keyG,keyH,keyI,keyJ,keyK,keyL,keyM,keyN,keyO,keyP,keyQ,keyR,keyS,keyT,keyU,keyV,keyW,keyX,keyY,keyZ,space|
+|color27k=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1|
+|shuffle27k=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1|
+|stepRtn27k=c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c|
+|pos27k=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26|
+|keyCtrl27k=65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,32|
+|div27k=27|
+|scale27k=0.95|
+|scroll27k=Split::1,1,1,1,1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1,1,1,1,1,-1,1,1,1,-1,1,-1|
+|minWidth27k=750|
+
+|keyName37k=27k|
+|chara37k=keyA,keyB,keyC,keyD,keyE,keyF,keyG,keyH,keyI,keyJ,keyK,keyL,keyM,keyN,keyO,keyP,keyQ,keyR,keyS,keyT,keyU,keyV,keyW,keyX,keyY,keyZ,keyOne,keyTwo,keyThree,keyFour,keyFive,keySix,keySeven,keyEight,keyNine,keyZero,space|
+|color37k=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1|
+|shuffle37k=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,2|
+|stepRtn37k=c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c|
+|keyCtrl37k=65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,49/97,50/98,51/99,52/100,53/101,54/102,55/103,56/104,57/105,48/96,32|
+|div37k=37|
+|scale37k=0.95|
+|scroll37k=Split::1,1,1,1,1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1,1,1,1,1,-1,1,1,1,-1,1,1,1,1,1,1,-1,-1,-1,-1,-1,-1|
+|minWidth37k=750|
+
+|chara47k=keyA,keyI,keyU,keyE,keyO,keyKA,keyKI,keyKU,keyKE,keyKO,keySA,keySI,keySU,keySE,keySO,keyTA,keyTI,keyTU,keyTE,keyTO,keyNA,keyNI,keyNU,keyNE,keyNO,keyHA,keyHI,keyHU,keyHE,keyHO,keyMA,keyMI,keyMU,keyME,keyMO,keyYA,keyYU,keyYO,keyRA,keyRI,keyRU,keyRE,keyRO,keyWA,keyWO,keyNN,space|
+|color47k=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1|
+|shuffle47k=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1|
+|stepRtn47k=c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c|
+|pos47k=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46|
+|keyCtrl47k=51,69,52,53,54,84,71,72,186,66,88,68,82,80,67,81,65,90,87,83,85,73,49,188,75,70,86,50,222,189,74,78,221,191,77,55,56,57,79,76,190,187,226,48,48,89,32|
+|div47k=47|
+|scale47k=0.95|
+|scroll47k=Split::1,1,1,1,1,1,1,-1,-1,1,1,1,1,-1,1,1,1,1,1,1,-1,-1,1,-1,-1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1|
+|minWidth47k=750|
+
+|keyName57k=47k|
+|chara57k=keyA,keyI,keyU,keyE,keyO,keyKA,keyKI,keyKU,keyKE,keyKO,keySA,keySI,keySU,keySE,keySO,keyTA,keyTI,keyTU,keyTE,keyTO,keyNA,keyNI,keyNU,keyNE,keyNO,keyHA,keyHI,keyHU,keyHE,keyHO,keyMA,keyMI,keyMU,keyME,keyMO,keyYA,keyYU,keyYO,keyRA,keyRI,keyRU,keyRE,keyRO,keyWA,keyWO,keyNN,keyZERO,keyONE,keyTWO,keyTHREE,keyFOUR,keyFIVE,keySIX,keySEVEN,keyEIGHT,keyNINE,space|
+|color57k=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1|
+|shuffle57k=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,2|
+|stepRtn57k=c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c|
+|pos57k=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56|
+|keyCtrl57k=51,69,52,53,54,84,71,72,186,66,88,68,82,80,67,81,65,90,87,83,85,73,49,188,75,70,86,50,222,189,74,78,221,191,77,55,56,57,79,76,190,187,226,48,48,89,48/96,49/97,50/98,51/99,52/100,53/101,54/102,55/103,56/104,57/105,32|
+|div57k=57|
+|scale57k=0.95|
+|scroll57k=Split::1,1,1,1,1,1,1,-1,-1,1,1,1,1,-1,1,1,1,1,1,1,-1,-1,1,-1,-1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1,1,1,1,1,-1,-1,-1,-1,-1|
+|minWidth57k=750|
+
+|keyName73k=47k|
+|chara73k=keyAA,keyII,keyUU,keyEE,keyOO,keyKA,keyKI,keyKU,keyKE,keyKO,keySA,keySI,keySU,keySE,keySO,keyTA,keyTI,keyTU,keyTE,keyTO,keyNA,keyNI,keyNU,keyNE,keyNO,keyHA,keyHI,keyHU,keyHE,keyHO,keyMA,keyMI,keyMU,keyME,keyMO,keyYA,keyYU,keyYO,keyRA,keyRI,keyRU,keyRE,keyRO,keyWA,keyWO,keyNN,keyA,keyB,keyC,keyD,keyE,keyF,keyG,keyH,keyI,keyJ,keyK,keyL,keyM,keyN,keyO,keyP,keyQ,keyR,keyS,keyT,keyU,keyV,keyW,keyX,keyY,keyZ,space|
+|color73k=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1|
+|shuffle73k=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2|
+|stepRtn73k=c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c|
+|pos73k=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72|
+|keyCtrl73k=51,69,52,53,54,84,71,72,186,66,88,68,82,80,67,81,65,90,87,83,85,73,49,188,75,70,86,50,222,189,74,78,221,191,77,55,56,57,79,76,190,187,226,48,48,89,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,32|
+|div73k=73|
+|scale73k=0.95|
+|minWidth73k=750|
+
+|keyName83k=47k|
+|chara83k=keyAA,keyII,keyUU,keyEE,keyOO,keyKA,keyKI,keyKU,keyKE,keyKO,keySA,keySI,keySU,keySE,keySO,keyTA,keyTI,keyTU,keyTE,keyTO,keyNA,keyNI,keyNU,keyNE,keyNO,keyHA,keyHI,keyHU,keyHE,keyHO,keyMA,keyMI,keyMU,keyME,keyMO,keyYA,keyYU,keyYO,keyRA,keyRI,keyRU,keyRE,keyRO,keyWA,keyWO,keyNN,keyA,keyB,keyC,keyD,keyE,keyF,keyG,keyH,keyI,keyJ,keyK,keyL,keyM,keyN,keyO,keyP,keyQ,keyR,keyS,keyT,keyU,keyV,keyW,keyX,keyY,keyZ,keyZERO,keyONE,keyTWO,keyTHREE,keyFOUR,keyFIVE,keySIX,keySEVEN,keyEIGHT,keyNINE,space|
+|color83k=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1|
+|shuffle83k=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,3|
+|stepRtn83k=c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c|
+|pos83k=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82|
+|keyCtrl83k=51,69,52,53,54,84,71,72,186,66,88,68,82,80,67,81,65,90,87,83,85,73,49,188,75,70,86,50,222,189,74,78,221,191,77,55,56,57,79,76,190,187,226,48,48,89,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,48/96,49/97,50/98,51/99,52/100,53/101,54/102,55/103,56/104,57/105,32|
+|div83k=83|
+|scale83k=0.95|
+|minWidth83k=750|
+
+|chara31k=keyA,keyB,keyC,keyD,keyE,keyF,keyG,keyH,keyI,keyJ,keyK,keyL,keyM,keyN,keyO,keyP,keyQ,keyR,keyS,keyT,keyU,keyV,keyW,keyX,keyY,keyZ,left,down,up,right,space$keyA,keyB,keyC,keyD,keyE,keyF,keyG,keyH,keyI,keyJ,keyK,keyL,keyM,keyN,keyO,keyP,keyQ,keyR,keyS,keyT,keyU,keyV,keyW,keyX,keyY,keyZ,space,left,down,up,right|
+|color31k=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,3$0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,2,2,2,2|
+|shuffle31k=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,3$0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,2,2,2,2|
+|stepRtn31k=c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,0,-90,90,180,onigiri$c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,onigiri,0,-90,90,180|
+|pos31k=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30$0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30|
+|keyCtrl31k=65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,37,40,38,39,32$65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,32,37,40,38,39|
+|div31k=26$26|
+|scale31k=0.9$0.9|
+|scroll31k=Split::1,1,1,1,1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1,1,1,1,1,-1,1,1,1,-1,1,-1,-1,1,1,1$Split::1,1,1,1,1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1,1,1,1,1,-1,1,1,1,-1,1,-1,-1,-1,1,1|
+|minWidth31k=750|
+
+|keyName41k=31k|
+|chara41k=keyA,keyB,keyC,keyD,keyE,keyF,keyG,keyH,keyI,keyJ,keyK,keyL,keyM,keyN,keyO,keyP,keyQ,keyR,keyS,keyT,keyU,keyV,keyW,keyX,keyY,keyZ,keyZERO,keyONE,keyTWO,keyTHREE,keyFOUR,keyFIVE,keySIX,keySEVEN,keyEIGHT,keyNINE,left,down,up,right,space$keyA,keyB,keyC,keyD,keyE,keyF,keyG,keyH,keyI,keyJ,keyK,keyL,keyM,keyN,keyO,keyP,keyQ,keyR,keyS,keyT,keyU,keyV,keyW,keyX,keyY,keyZ,keyZERO,keyONE,keyTWO,keyTHREE,keyFOUR,keyFIVE,keySIX,keySEVEN,keyEIGHT,keyNINE,space,left,down,up,right|
+|color41k=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,3$0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,2,2,2,2|
+|shuffle41k=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,2,2,2,2,3$0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,3,2,2,2,2|
+|stepRtn41k=c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,0,-90,90,180,onigiri$c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,onigiri,0,-90,90,180|
+|pos41k=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40$0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40|
+|keyCtrl41k=65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,48/96,49/97,50/98,51/99,52/100,53/101,54/102,55/103,56/104,57/105,37,40,38,39,32$65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,48/96,49/97,50/98,51/99,52/100,53/101,54/102,55/103,56/104,57/105,32,37,40,38,39|
+|div41k=36$36|
+|scale41k=0.9$0.9|
+|scroll41k=Split::1,1,1,1,1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1,1,1,1,1,-1,1,1,1,-1,1,1,1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1,1,1,1$Split::1,1,1,1,1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1,1,1,1,1,-1,1,1,1,-1,1,1,1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1,1|
+|minWidth41k=750|
+
+|chara51k=keyA,keyI,keyU,keyE,keyO,keyKA,keyKI,keyKU,keyKE,keyKO,keySA,keySI,keySU,keySE,keySO,keyTA,keyTI,keyTU,keyTE,keyTO,keyNA,keyNI,keyNU,keyNE,keyNO,keyHA,keyHI,keyHU,keyHE,keyHO,keyMA,keyMI,keyMU,keyME,keyMO,keyYA,keyYU,keyYO,keyRA,keyRI,keyRU,keyRE,keyRO,keyWA,keyWO,keyNN,left,down,up,right,space$keyA,keyI,keyU,keyE,keyO,keyKA,keyKI,keyKU,keyKE,keyKO,keySA,keySI,keySU,keySE,keySO,keyTA,keyTI,keyTU,keyTE,keyTO,keyNA,keyNI,keyNU,keyNE,keyNO,keyHA,keyHI,keyHU,keyHE,keyHO,keyMA,keyMI,keyMU,keyME,keyMO,keyYA,keyYU,keyYO,keyRA,keyRI,keyRU,keyRE,keyRO,keyWA,keyWO,keyNN,space,left,down,up,right|
+|color51k=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,3$0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,2,2,2,2|
+|shuffle51k=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,3$0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,2,2,2,2|
+|stepRtn51k=c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,0,-90,90,180,onigiri$c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,onigiri,0,-90,90,180|
+|pos51k=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50$0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50|
+|keyCtrl51k=51,69,52,53,54,84,71,72,186,66,88,68,82,80,67,81,65,90,87,83,85,73,49,188,75,70,86,50,222,189,74,78,221,191,77,55,56,57,79,76,190,187,226,48,48,89,37,40,38,39,32$51,69,52,53,54,84,71,72,186,66,88,68,82,80,67,81,65,90,87,83,85,73,49,188,75,70,86,50,222,189,74,78,221,191,77,55,56,57,79,76,190,187,226,48,48,89,32,37,40,38,39|
+|div51k=46$46|
+|scale51k=0.9$0.9|
+|scroll51k=Split::1,1,1,1,1,1,1,-1,-1,1,1,1,1,-1,1,1,1,1,1,1,-1,-1,1,-1,-1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1,1,1$Split::1,1,1,1,1,1,1,-1,-1,1,1,1,1,-1,1,1,1,1,1,1,-1,-1,1,-1,-1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1,1|
+|minWidth51k=750|
+
+|keyName61k=51k|
+|chara61k=keyA,keyI,keyU,keyE,keyO,keyKA,keyKI,keyKU,keyKE,keyKO,keySA,keySI,keySU,keySE,keySO,keyTA,keyTI,keyTU,keyTE,keyTO,keyNA,keyNI,keyNU,keyNE,keyNO,keyHA,keyHI,keyHU,keyHE,keyHO,keyMA,keyMI,keyMU,keyME,keyMO,keyYA,keyYU,keyYO,keyRA,keyRI,keyRU,keyRE,keyRO,keyWA,keyWO,keyNN,keyZERO,keyONE,keyTWO,keyTHREE,keyFOUR,keyFIVE,keySIX,keySEVEN,keyEIGHT,keyNINE,left,down,up,right,space$keyA,keyI,keyU,keyE,keyO,keyKA,keyKI,keyKU,keyKE,keyKO,keySA,keySI,keySU,keySE,keySO,keyTA,keyTI,keyTU,keyTE,keyTO,keyNA,keyNI,keyNU,keyNE,keyNO,keyHA,keyHI,keyHU,keyHE,keyHO,keyMA,keyMI,keyMU,keyME,keyMO,keyYA,keyYU,keyYO,keyRA,keyRI,keyRU,keyRE,keyRO,keyWA,keyWO,keyNN,keyZERO,keyONE,keyTWO,keyTHREE,keyFOUR,keyFIVE,keySIX,keySEVEN,keyEIGHT,keyNINE,space,left,down,up,right|
+|color61k=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,3$0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,2,2,2,2|
+|shuffle61k=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,2,2,2,2,3$0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,3,2,2,2,2|
+|stepRtn61k=c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,0,-90,90,180,onigiri$c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,onigiri,0,-90,90,180|
+|pos61k=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60$0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,6|
+|keyCtrl61k=51,69,52,53,54,84,71,72,186,66,88,68,82,80,67,81,65,90,87,83,85,73,49,188,75,70,86,50,222,189,74,78,221,191,77,55,56,57,79,76,190,187,226,48,48,89,48/96,49/97,50/98,51/99,52/100,53/101,54/102,55/103,56/104,57/105,37,40,38,39,32$51,69,52,53,54,84,71,72,186,66,88,68,82,80,67,81,65,90,87,83,85,73,49,188,75,70,86,50,222,189,74,78,221,191,77,55,56,57,79,76,190,187,226,48,48,89,48/96,49/97,50/98,51/99,52/100,53/101,54/102,55/103,56/104,57/105,32,37,40,38,39|
+|div61k=56$56|
+|scale61k=0.9$0.9|
+|scroll61k=Split::1,1,1,1,1,1,1,-1,-1,1,1,1,1,-1,1,1,1,1,1,1,-1,-1,1,-1,-1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1,1,1,1,1,-1,-1,-1,-1,-1,-1,-1,1,1,1$Split::1,1,1,1,1,1,1,-1,-1,1,1,1,1,-1,1,1,1,1,1,1,-1,-1,1,-1,-1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1,1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1,1,1|
+|minWidth61k=750|
+
+`);
