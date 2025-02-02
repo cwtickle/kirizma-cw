@@ -20,7 +20,7 @@ Kirizma (CW Edition)では、[Dancing☆Onigiri (CW Edition)](https://github.com
    - kstyle.js  をjs フォルダへ
    - kstyle.css をcssフォルダへ
    - img/kirizma フォルダ一式をimgフォルダへ
-   - danoni_setting.js の g_presetObj.keysData へキリズマ用のキー定義を追加
+   - danoni_setting.js の g_presetObj.keysData へキリズマ用のキー定義を追加 (v1のみ、v2以降は不要)
 ```javascript
 g_presetObj.keysData=`
 
