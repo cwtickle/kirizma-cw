@@ -16,22 +16,10 @@ g_lblNameObj.dancing = `KIRI`;
 g_lblNameObj.star = ``;
 g_lblNameObj.onigiri = `ZMA`;
 
-g_rootObj.arrowEffectUse = `false,ON`;
 g_rootObj.specialUse = `true,OFF`;
 g_rootObj.imgType = `kirizma,svg,true,0`;
 g_rootObj.arrowJdgY = -10;
 g_rootObj.frzJdgY = -50;
-
-// 矢印モーション初期定義
-g_rootObj.arrowMotion_data = `
-0,20,blocks,blocks
-0,21,blocks,blocks
-`;
-
-g_rootObj.frzMotion_data = `
-0,20,fblocks,fblocks
-0,21,fblocks,fblocks
-`;
 
 // キリズマ用文字定義
 const g_kirizmaChars = {
@@ -103,7 +91,6 @@ function kstylePreTitleInit() {
 	g_posObj.arrowHeight = DIST_KIRIZMA + g_posObj.stepYR - g_posObj.stepDiffY * 2;
 
 	// キリズマで扱えない機能を無効化
-	g_headerObj.effectUse = false;
 	g_headerObj.camoufrageUse = false;
 	g_headerObj.swappingUse = false;
 }
@@ -304,46 +291,40 @@ g_customJsObj.main.push(kstyleMainInit);
 /**
  * プレイ画面・フレーム毎処理の割込み
  * - キリズマの文字表示部分を定義 (Source by SKB)
+ * @param {number} _j 
+ * @param {string} _name 
  */
-function kstyleMainEnterFrame() {
-
-	const attributeName = 'overlay_character';
-	const arrowPattern = /arrow(?<arrowNum>\d+)_(\d+)/;
-	const frzPattern = /frz(?<arrowNum>\d+)_(\d+)/;
-
-	const putCharOnBlock = (block, pattern, cType) => {
-		if (!block.hasAttribute(attributeName)) {
-			block.setAttribute(attributeName, true);
-			const id = block.id;
-			const arrowNum = pattern.exec(id).groups.arrowNum;
-			const targetId = document.getElementById(`${cType}${pattern.exec(id)[1]}_${pattern.exec(id)[2]}`);
-
-			if (g_stateObj.d_special === C_FLG_OFF) {
-				// 補助表示OFF時
-				const kirizmaChara = document.createElement('div');
-				kirizmaChara.className = 'kirizma_chara';
-				kirizmaChara.innerText = crType[g_workObj.charFlg].char[arrowNum] ?? ``;
-				targetId.appendChild(kirizmaChara);
-			} else {
-				// 補助表示ON時のメイン文字
-				const kirizmaChara = document.createElement('div');
-				kirizmaChara.className = 'kirizma_assist_chara';
-				kirizmaChara.innerText = crType[g_workObj.charFlg].char[arrowNum] ?? ``;
-				targetId.appendChild(kirizmaChara);
-
-				// 補助表示ON時の追加文字
-				const kirizmaExChara = document.createElement('div');
-				kirizmaExChara.className = 'kirizma_assist_exchara';
-				kirizmaExChara.innerText = crType[g_workObj.charFlg].exchar[arrowNum] ?? ``;
-				targetId.appendChild(kirizmaExChara);
-			}
-		}
+const __setKirizmaChara = (_j, _name) => {
+	if (_j >= crType[g_workObj.charFlg].char.length) {
+		return;
 	}
 
-	Array.from(document.getElementsByClassName('blocks')).forEach(b => putCharOnBlock(b, arrowPattern, `arrow`));
-	Array.from(document.getElementsByClassName('fblocks')).forEach(b => putCharOnBlock(b, frzPattern, `frzTop`));
-}
-g_customJsObj.mainEnterFrame.push(kstyleMainEnterFrame);
+	const targetId = document.getElementById(_name);
+	if (g_stateObj.d_special === C_FLG_OFF) {
+		// 補助表示OFF時
+		const kirizmaChara = document.createElement('div');
+		kirizmaChara.className = 'kirizma_chara';
+		kirizmaChara.innerText = crType[g_workObj.charFlg].char[_j] ?? ``;
+		targetId.appendChild(kirizmaChara);
+	} else {
+		// 補助表示ON時のメイン文字
+		const kirizmaChara = document.createElement('div');
+		kirizmaChara.className = 'kirizma_assist_chara';
+		kirizmaChara.innerText = crType[g_workObj.charFlg].char[_j] ?? ``;
+		targetId.appendChild(kirizmaChara);
+
+		// 補助表示ON時の追加文字
+		const kirizmaExChara = document.createElement('div');
+		kirizmaExChara.className = 'kirizma_assist_exchara';
+		kirizmaExChara.innerText = crType[g_workObj.charFlg].exchar[_j] ?? ``;
+		targetId.appendChild(kirizmaExChara);
+	}
+};
+
+g_customJsObj.makeArrow.push((_attrs, _arrowName, _name, _arrowCnt) =>
+	__setKirizmaChara(_attrs.pos, _arrowName));
+g_customJsObj.makeFrzArrow.push((_attrs, _arrowName, _name, _arrowCnt) =>
+	__setKirizmaChara(_attrs.pos, `${_name}Top${_attrs.pos}_${_arrowCnt}`));
 
 /**
  * キーコンフィグ画面の割込み処理
