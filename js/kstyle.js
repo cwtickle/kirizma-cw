@@ -93,6 +93,12 @@ function kstylePreTitleInit() {
 	// キリズマで扱えない機能を無効化
 	g_headerObj.camoufrageUse = false;
 	g_headerObj.swappingUse = false;
+
+	// ショートカット
+	g_shortcutObj.settingsDisplay.KeyJ = { id: `lnkJtoZ` };
+	g_shortcutObj.settingsDisplay.KeyC = { id: `lnkCtoT` };
+	g_shortcutObj.settingsDisplay.KeyF = { id: `lnkFtoH` };
+	g_shortcutObj.settingsDisplay.KeyR = { id: `lnkRtoL` };
 }
 g_customJsObj.preTitle.push(kstylePreTitleInit);
 
@@ -242,7 +248,6 @@ g_customJsObj.loading.push(kstyleLoading);
  * プレイ画面初期化部分の割込み処理
  * 
  * - キリズマ譜面は矢印描画エリア(mainSprite, stepRoot)を-90度回転させる
- * - ダンおに譜面混載時は、ダンおに部分(arrowSprite, stepRoot)のみさらに90度回転させる
  * - キリズマ部分はX-Y座標が反転しているため、変更する際は注意
  */
 function kstyleMainInit() {
@@ -262,7 +267,7 @@ function kstyleMainInit() {
 
 		// mainSpriteを90度回転させて移動方向を変更
 		for (let j = 0; j < Math.min(g_stateObj.layerNum, 4); j++) {
-			$id(`mainSprite${j}`).transform = `rotate(-90deg)`;
+			addTransform(`mainSprite${j}`, `kirizma`, `rotate(-90deg)`);
 			$id(`mainSprite${j}`).left = `0px`;
 			$id(`mainSprite${j}`).top = `-180px`;
 		}
@@ -272,7 +277,7 @@ function kstyleMainInit() {
 			$id(`mainSprite${g_stateObj._danoniRvLayer}`).top = `${g_headerObj.playingHeight - DIST_KIRIZMA}px`;
 		}
 
-		// 全てのレーン数 ＞ キリズマ側のレーン数なら矢印側のオブジェクトを回転
+		// キリズマ側のレーンのみ初期位置を変更
 		const keyNumMax = g_workObj.stepRtn.filter(val => val === `c`).length;
 		for (let i = 0; i < keyNumMax; i++) {
 			if (document.getElementById(`stepRoot${i}`)) {
