@@ -4,12 +4,12 @@
  * [for Kirizma]
  * 
  * Created: 2022/09/17
- * Revised: 2025/02/03
- * Source Version: Ver 2.1.0
+ * Revised: 2025/02/06
+ * Source Version: Ver 2.1.1
  * 
  * https://github.com/cwtickle/kirizma-cw
  */
-const g_kirizmaVersion = `Ver 2.1.0`;
+const g_kirizmaVersion = `Ver 2.1.1`;
 
 // 初期設定定義
 g_lblNameObj.dancing = `KIRI`;
