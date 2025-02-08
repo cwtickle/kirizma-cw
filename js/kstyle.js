@@ -267,7 +267,11 @@ function kstyleMainInit() {
 
 		// mainSpriteを90度回転させて移動方向を変更
 		for (let j = 0; j < Math.min(g_stateObj.layerNum, 4); j++) {
-			addTransform(`mainSprite${j}`, `kirizma`, `rotate(-90deg)`);
+			if (typeof addTransform === C_TYP_FUNCTION) {
+				addTransform(`mainSprite${j}`, `kirizma`, `rotate(-90deg)`);
+			} else {
+				$id(`mainSprite${j}`).transform = `rotate(-90deg)`;
+			}
 			$id(`mainSprite${j}`).left = `0px`;
 			$id(`mainSprite${j}`).top = `-180px`;
 		}
