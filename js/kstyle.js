@@ -233,7 +233,7 @@ function kstyleLoading() {
 
 		// 矢印側はdividePosを4以上に設定する
 		// StepArea: X-FlowerがdividePosが3以下を利用するため、0～3はキリズマレーンとする
-		g_stateObj.layerNum = 6;
+		g_stateObj.layerNum = Math.max(g_stateObj.layerNum, 6);
 		g_workObj.stepRtn.forEach((val, j) => {
 			if (val !== `c`) {
 				g_workObj.dividePos[j] = (g_workObj.scrollDir[j] === 1 ?
@@ -272,9 +272,30 @@ function kstyleMainInit() {
 			} else {
 				$id(`mainSprite${j}`).transform = `rotate(-90deg)`;
 			}
-			$id(`mainSprite${j}`).left = `0px`;
-			$id(`mainSprite${j}`).top = `-180px`;
+			if (typeof addXY === C_TYP_FUNCTION) {
+				addXY(`mainSprite${j}`, `kirizma`, 0, -180);
+
+				if ([`2Step`, `Mismatched`, `R-Mismatched`].includes(g_stateObj.stepArea)
+					&& j >= Math.min(g_stateObj.layerNum, 4) / 2) {
+					// 下記の設定の場合、ステップゾーンが同じ位置にあり打ちにくいため、座標を調整
+					const deltaX = C_ARW_WIDTH * 3 * Number(g_stateObj.reverse === C_FLG_ON ? 1 : -1);
+					addXY(`stepSprite${j}`, `kirizma`, deltaX, 0);
+					addXY(`arrowSprite${j}`, `kirizma`, deltaX, 0);
+					addXY(`frzHitSprite${j}`, `kirizma`, deltaX, 0);
+
+				} else if (g_stateObj.stepArea === `Halfway`) {
+					// 移動距離を変えているため、Halfwayの場合も位置を調整
+					const deltaY = (j % 2 === 0 ? 1 : -1) * (DIST_KIRIZMA - g_headerObj.playingHeight) / 2;
+					addXY(`stepSprite${j}`, `kirizma`, 0, deltaY);
+					addXY(`arrowSprite${j}`, `kirizma`, 0, deltaY);
+					addXY(`frzHitSprite${j}`, `kirizma`, 0, deltaY);
+				}
+			} else {
+				$id(`mainSprite${j}`).left = `0px`;
+				$id(`mainSprite${j}`).top = `-180px`;
+			}
 		}
+
 		// キリズマは通常より長いスクロール長のため、
 		// ダンおにが使うReverseに合わせて位置を調整
 		if (g_stateObj.layerNum > 4) {
