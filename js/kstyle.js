@@ -32,7 +32,7 @@ const g_kirizmaChars = {
 	kana: 'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん'.split(''),
 	kanaEx: '3E456TGH:BXDRPCQAZWSUI1<KFV2^-JN]?M789OL>+_00Y'.split(''),
 
-	kana_num: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 '.split(''),
+	kana_num: 'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん0123456789　'.split(''),
 	kana_numEx: '3E456TGH:BXDRPCQAZWSUI1<KFV2^-JN]?M789OL>+_00Yわぬふあうえおやゆよ '.split(''),
 
 	kana_alphabet: 'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんABCDEFGHIJKLMNOPQRSTUVWXYZ　'.split(''),
@@ -397,11 +397,11 @@ g_presetObj.keysDataLib.push(`
 |minWidth27k=750|
 
 |keyName37k=27k|
-|chara37k=keyA,keyB,keyC,keyD,keyE,keyF,keyG,keyH,keyI,keyJ,keyK,keyL,keyM,keyN,keyO,keyP,keyQ,keyR,keyS,keyT,keyU,keyV,keyW,keyX,keyY,keyZ,keyOne,keyTwo,keyThree,keyFour,keyFive,keySix,keySeven,keyEight,keyNine,keyZero,space|
+|chara37k=keyA,keyB,keyC,keyD,keyE,keyF,keyG,keyH,keyI,keyJ,keyK,keyL,keyM,keyN,keyO,keyP,keyQ,keyR,keyS,keyT,keyU,keyV,keyW,keyX,keyY,keyZ,keyZero,keyOne,keyTwo,keyThree,keyFour,keyFive,keySix,keySeven,keyEight,keyNine,space|
 |color37k=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1|
 |shuffle37k=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,2|
 |stepRtn37k=c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c|
-|keyCtrl37k=65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,49/97,50/98,51/99,52/100,53/101,54/102,55/103,56/104,57/105,48/96,32|
+|keyCtrl37k=65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,48/96,49/97,50/98,51/99,52/100,53/101,54/102,55/103,56/104,57/105,32|
 |div37k=37|
 |scale37k=0.95|
 |scroll37k=Split::1,1,1,1,1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1,1,1,1,1,-1,1,1,1,-1,1,1,1,1,1,1,-1,-1,-1,-1,-1,-1|
