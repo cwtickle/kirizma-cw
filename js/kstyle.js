@@ -299,7 +299,11 @@ function kstyleMainInit() {
 		// キリズマは通常より長いスクロール長のため、
 		// ダンおにが使うReverseに合わせて位置を調整
 		if (g_stateObj.layerNum > 4) {
-			$id(`mainSprite${g_stateObj._danoniRvLayer}`).top = `${g_headerObj.playingHeight - DIST_KIRIZMA}px`;
+			if (typeof addXY === C_TYP_FUNCTION) {
+				addXY(`mainSprite${g_stateObj._danoniRvLayer}`, `kirizma`, 0, g_headerObj.playingHeight - DIST_KIRIZMA);
+			} else {
+				$id(`mainSprite${g_stateObj._danoniRvLayer}`).top = `${g_headerObj.playingHeight - DIST_KIRIZMA}px`;
+			}
 		}
 
 		// キリズマ側のレーンのみ初期位置を変更
