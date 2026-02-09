@@ -222,24 +222,34 @@ function kstylePreloading() {
 g_customJsObj.preloading.push(kstylePreloading);
 
 /**
+ * キリズマレーンの判定
+ * @param {string|number} _val 
+ * @returns 
+ */
+const __checkKirizmaCharacter = _val => _val === `c` || String(_val).startsWith(`c:`);
+
+/**
  * プレイ開始前の割り込み処理
  * - キリズマ以外のデータが存在する場合の振り分け処理
  */
 function kstyleLoading() {
 
 	// 全てのレーン数 ＞ キリズマ側のレーン数なら矢印があると見做す
-	const keyNumMax = g_workObj.stepRtn.filter(val => val === `c`).length;
+	const keyNumMax = g_workObj.stepRtn.filter(val => __checkKirizmaCharacter(val)).length;
 	if (g_workObj.stepRtn.length > keyNumMax) {
 
 		// 矢印側はdividePosを4以上に設定する
 		// StepArea: X-FlowerがdividePosが3以下を利用するため、0～3はキリズマレーンとする
 		g_stateObj.layerNum = Math.max(g_stateObj.layerNum, 6);
 		g_workObj.stepRtn.forEach((val, j) => {
-			if (val !== `c`) {
+			if (!__checkKirizmaCharacter(val)) {
 				g_workObj.dividePos[j] = (g_workObj.scrollDir[j] === 1 ?
 					g_stateObj._danoniDfLayer : g_stateObj._danoniRvLayer);
 			}
 		})
+	}
+	if (g_stateObj.playWindow.endsWith(`SideScroll`)) {
+		g_workObj.scale = 0.95 * Math.max(g_sHeight / 600, 1);
 	}
 }
 g_customJsObj.loading.push(kstyleLoading);
@@ -275,6 +285,12 @@ function kstyleMainInit() {
 			if (typeof addXY === C_TYP_FUNCTION) {
 				addXY(`mainSprite${j}`, `kirizma`, 0, -180);
 
+				if (g_stateObj.playWindow.endsWith(`SideScroll`)) {
+					for (let j = 0; j < Math.min(g_stateObj.layerNum, 4); j++) {
+						addXY(`mainSprite${j}`, `kirizmaSc`, 60, 0);
+					}
+				}
+
 				if ([`2Step`, `Mismatched`, `R-Mismatched`].includes(g_stateObj.stepArea)
 					&& j >= Math.min(g_stateObj.layerNum, 4) / 2) {
 					// 下記の設定の場合、ステップゾーンが同じ位置にあり打ちにくいため、座標を調整
@@ -307,7 +323,7 @@ function kstyleMainInit() {
 		}
 
 		// キリズマ側のレーンのみ初期位置を変更
-		const keyNumMax = g_workObj.stepRtn.filter(val => val === `c`).length;
+		const keyNumMax = g_workObj.stepRtn.filter(val => __checkKirizmaCharacter(val)).length;
 		for (let i = 0; i < keyNumMax; i++) {
 			if (document.getElementById(`stepRoot${i}`)) {
 				document.getElementById(`stepRoot${i}`).style.left = `${pos[g_workObj.scrollDir[i]].y}px`;
