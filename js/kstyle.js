@@ -248,8 +248,9 @@ function kstyleLoading() {
 			}
 		})
 	}
+	// SideScrollの場合は縦横が反転するため、ウィンドウの高さによりスケールを調整
 	if (g_stateObj.playWindow.endsWith(`SideScroll`)) {
-		g_workObj.scale = 0.95 * Math.max(g_sHeight / 600, 1);
+		g_workObj.scale = 0.95 * Math.min(g_sHeight / 600, 1);
 	}
 }
 g_customJsObj.loading.push(kstyleLoading);
@@ -285,6 +286,7 @@ function kstyleMainInit() {
 			if (typeof addXY === C_TYP_FUNCTION) {
 				addXY(`mainSprite${j}`, `kirizma`, 0, -180);
 
+				// SideScrollの場合は縦横が反転するため、ウィンドウの高さにより位置を調整
 				if (g_stateObj.playWindow.endsWith(`SideScroll`)) {
 					for (let j = 0; j < Math.min(g_stateObj.layerNum, 4); j++) {
 						addXY(`mainSprite${j}`, `kirizmaSc`, 60, 0);
