@@ -319,6 +319,9 @@ function kstyleMainInit() {
 		if (g_stateObj.layerNum > 4) {
 			if (typeof addXY === C_TYP_FUNCTION) {
 				addXY(`mainSprite${g_stateObj._danoniRvLayer}`, `kirizma`, 0, g_headerObj.playingHeight - DIST_KIRIZMA);
+				if ((g_hidSudObj[g_stateObj.appearance] + 1) % 2 === 0) {
+					addXY(`filterBar${4 + (g_hidSudObj[g_stateObj.appearance] + 1) % 2}`, `kirizma`, 0, g_headerObj.playingHeight - DIST_KIRIZMA);
+				}
 			} else {
 				$id(`mainSprite${g_stateObj._danoniRvLayer}`).top = `${g_headerObj.playingHeight - DIST_KIRIZMA}px`;
 			}
