@@ -272,6 +272,25 @@ function kstyleMainInit() {
 			'-1': { x: 530, y: 230 },
 		};
 
+		// バージョン比較処理 (x.y.z-a1形式)
+		const __compareVersions = (versionA, versionB) => {
+			const partsA = versionA.split('-').join('.').split('.').map(j => parseInt(j, 36));
+			const partsB = versionB.split('-').join('.').split('.').map(j => parseInt(j, 36));
+			const maxLen = Math.max(partsA.length, partsB.length);
+
+			for (let i = 0; i < maxLen; i++) {
+				partsA[i] = partsA[i] || 0;
+				partsB[i] = partsB[i] || 0;
+
+				if (partsA[i] < partsB[i]) {
+					return -1; // versionA is older
+				} else if (partsA[i] > partsB[i]) {
+					return 1; // versionA is newer
+				}
+			}
+			return 0; // versionA and versionB are equal
+		};
+
 		const keyCtrlPtn = `${g_keyObj.currentKey}_${g_keyObj.currentPtn}`;
 		const kirizmaNum = g_keyObj[`color${keyCtrlPtn}_0d`].filter(val => val === 0).length;
 		g_workObj.charFlg = `k${kirizmaNum}`;
@@ -279,16 +298,22 @@ function kstyleMainInit() {
 		// mainSpriteを90度回転させて移動方向を変更
 		for (let j = 0; j < Math.min(g_stateObj.layerNum, 4); j++) {
 			if (typeof addTransform === C_TYP_FUNCTION) {
-				addTransform(`mainSprite${j}`, `kirizma`, `rotate(-90deg)`);
+				addTransform(`mainSprite${j}`, `kirizma`, `rotate(-90deg)`, { priority: 0 });
 			} else {
 				$id(`mainSprite${j}`).transform = `rotate(-90deg)`;
 			}
 			if (typeof addXY === C_TYP_FUNCTION) {
-				addXY(`mainSprite${j}`, `kirizma`, 0, -180);
+				if (__compareVersions(g_version.slice(1), `45.0.0`) >= 0) {
+					addXY(`mainSprite${j}`, `kirizma`, 180, 0, { priority: 0 });
+				} else {
+					addXY(`mainSprite${j}`, `kirizma`, 0, -180);
+				}
 
 				// SideScrollの場合は縦横が反転するため、ウィンドウの高さにより位置を調整
 				if (g_stateObj.playWindow.endsWith(`SideScroll`)) {
-					for (let j = 0; j < Math.min(g_stateObj.layerNum, 4); j++) {
+					if (__compareVersions(g_version.slice(1), `45.0.0`) >= 0) {
+						addXY(`mainSprite${j}`, `kirizmaSc`, 0, -60, { priority: 0 });
+					} else {
 						addXY(`mainSprite${j}`, `kirizmaSc`, 60, 0);
 					}
 				}
