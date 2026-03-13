@@ -326,12 +326,50 @@ function kstyleMainInit() {
 					addXY(`arrowSprite${j}`, `kirizma`, deltaX, 0);
 					addXY(`frzHitSprite${j}`, `kirizma`, deltaX, 0);
 
+					if (__compareVersions(g_version.slice(1), `45.0.0`) >= 0 && g_appearanceRanges.includes(g_stateObj.appearance)) {
+						// Hidden+, Sudden+の場合はレイヤー毎に座標を画面中央から見てフィルターバーを外側へシフト
+						addTransform(
+							`filterBar${j}`, `kirizmaX`,
+							`translateX(calc(${g_hidSudObj[g_stateObj.appearance] === 0 ? 1 : -1} * ${deltaX}px))`,
+							g_transPriority.stepArea
+						);
+
+						// Hid&Sud+の場合は片側に2つのフィルターバーが必要なため、
+						// 追加したフィルターバーを元のフィルターバーに対して反転するようにシフト
+						if (g_stateObj.appearance === `Hid&Sud+`) {
+							addTransform(
+								`filterBar${j}_HS`, `kirizmaX`,
+								`translateX(calc(${(-1) * (g_hidSudObj[g_stateObj.appearance] === 0 ? 1 : -1)} * ${deltaX}px))`,
+								g_transPriority.stepArea
+							);
+						}
+					}
+
 				} else if (g_stateObj.stepArea === `Halfway`) {
 					// 移動距離を変えているため、Halfwayの場合も位置を調整
 					const deltaY = (j % 2 === 0 ? 1 : -1) * (DIST_KIRIZMA - g_headerObj.playingHeight) / 2;
 					addXY(`stepSprite${j}`, `kirizma`, 0, deltaY);
 					addXY(`arrowSprite${j}`, `kirizma`, 0, deltaY);
 					addXY(`frzHitSprite${j}`, `kirizma`, 0, deltaY);
+
+					if (__compareVersions(g_version.slice(1), `45.0.0`) >= 0 && g_appearanceRanges.includes(g_stateObj.appearance)) {
+						// Hidden+, Sudden+の場合はレイヤー毎に座標を画面中央から見てフィルターバーを外側へシフト
+						addTransform(
+							`filterBar${j}`, `kirizmaY`,
+							`translateY(calc(${g_hidSudObj[g_stateObj.appearance] === 0 ? 1 : -1} * ${deltaY}px))`,
+							g_transPriority.stepArea
+						);
+
+						// Hid&Sud+の場合は片側に2つのフィルターバーが必要なため、
+						// 追加したフィルターバーを元のフィルターバーに対して反転するようにシフト
+						if (g_stateObj.appearance === `Hid&Sud+`) {
+							addTransform(
+								`filterBar${j}_HS`, `kirizmaY`,
+								`translateY(calc(${(-1) * (g_hidSudObj[g_stateObj.appearance] === 0 ? 1 : -1)} * ${deltaY}px))`,
+								g_transPriority.stepArea
+							);
+						}
+					}
 				}
 			} else {
 				$id(`mainSprite${j}`).left = `0px`;
