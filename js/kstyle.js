@@ -440,7 +440,7 @@ const __setKirizmaChara = (_j, _name) => {
 };
 
 g_customJsObj.makeArrow.push((_attrs, _arrowName, _name, _arrowCnt) =>
-	__setKirizmaChara(_attrs.pos, _arrowName));
+	__setKirizmaChara(_attrs.pos, `sub${_arrowName}`));
 g_customJsObj.makeFrzArrow.push((_attrs, _arrowName, _name, _arrowCnt) =>
 	__setKirizmaChara(_attrs.pos, `${_name}Top${_attrs.pos}_${_arrowCnt}`));
 
