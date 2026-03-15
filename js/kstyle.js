@@ -263,6 +263,28 @@ g_customJsObj.loading.push(kstyleLoading);
  */
 function kstyleMainInit() {
 
+	// バージョン比較処理 (x.y.z-a1形式)
+	const __compareVersions = (versionA, versionB) => {
+		const partsA = versionA.split('-').join('.').split('.').map(j => parseInt(j, 36));
+		const partsB = versionB.split('-').join('.').split('.').map(j => parseInt(j, 36));
+		const maxLen = Math.max(partsA.length, partsB.length);
+
+		for (let i = 0; i < maxLen; i++) {
+			partsA[i] = partsA[i] || 0;
+			partsB[i] = partsB[i] || 0;
+
+			if (partsA[i] < partsB[i]) {
+				return -1; // versionA is older
+			} else if (partsA[i] > partsB[i]) {
+				return 1; // versionA is newer
+			}
+		}
+		return 0; // versionA and versionB are equal
+	};
+
+	// v45以降はEffectを掛ける対象が異なるため、分岐
+	g_workObj._arrowHeader = __compareVersions(g_version.slice(1), `45.0.0`) >= 0 ? `sub` : ``;
+
 	// キリズマのステップゾーンを移動する (キー数の末尾が'k'ならキリズマ系統と見做す)
 	if (g_keyObj.currentKey.endsWith(`k`)) {
 
@@ -270,25 +292,6 @@ function kstyleMainInit() {
 		const pos = {
 			'1': { x: 75, y: 350 },
 			'-1': { x: 530, y: 230 },
-		};
-
-		// バージョン比較処理 (x.y.z-a1形式)
-		const __compareVersions = (versionA, versionB) => {
-			const partsA = versionA.split('-').join('.').split('.').map(j => parseInt(j, 36));
-			const partsB = versionB.split('-').join('.').split('.').map(j => parseInt(j, 36));
-			const maxLen = Math.max(partsA.length, partsB.length);
-
-			for (let i = 0; i < maxLen; i++) {
-				partsA[i] = partsA[i] || 0;
-				partsB[i] = partsB[i] || 0;
-
-				if (partsA[i] < partsB[i]) {
-					return -1; // versionA is older
-				} else if (partsA[i] > partsB[i]) {
-					return 1; // versionA is newer
-				}
-			}
-			return 0; // versionA and versionB are equal
 		};
 
 		const keyCtrlPtn = `${g_keyObj.currentKey}_${g_keyObj.currentPtn}`;
@@ -440,7 +443,7 @@ const __setKirizmaChara = (_j, _name) => {
 };
 
 g_customJsObj.makeArrow.push((_attrs, _arrowName, _name, _arrowCnt) =>
-	__setKirizmaChara(_attrs.pos, _arrowName));
+	__setKirizmaChara(_attrs.pos, `${g_workObj._arrowHeader}${_arrowName}`));
 g_customJsObj.makeFrzArrow.push((_attrs, _arrowName, _name, _arrowCnt) =>
 	__setKirizmaChara(_attrs.pos, `${_name}Top${_attrs.pos}_${_arrowCnt}`));
 
