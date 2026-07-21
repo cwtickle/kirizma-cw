@@ -160,7 +160,8 @@ g_customJsObj.preTitle.push(() => {
 						// file://実行時: 差分のある2画像だけ手動で切替
 						C_IMG_AASD = kirizmaLocalImg.C_IMG_AASD;
 						C_IMG_C = kirizmaLocalImg.C_IMG_C;
-						reloadImgObj();
+						g_imgObj.cShadow = C_IMG_AASD;
+						g_imgObj.c = C_IMG_C;
 					} else {
 						updateImgType(kirizmaImgTypeArr[0]);
 					}
@@ -193,7 +194,8 @@ g_customJsObj.preTitle.push(() => {
 					if (g_isFile) {
 						C_IMG_AASD = origLocalImg.C_IMG_AASD;
 						C_IMG_C = origLocalImg.C_IMG_C;
-						reloadImgObj();
+						g_imgObj.cShadow = C_IMG_AASD;
+						g_imgObj.c = C_IMG_C;
 					} else {
 						updateImgType(origImgTypeArr[0]);
 					}
