@@ -109,6 +109,8 @@ g_customJsObj.preTitle.push(() => {
 		const origSwappingUse = g_headerObj.swappingUse;
 		const origSpecialUse = g_headerObj.specialUse;
 		const origSpecialSet = g_headerObj.specialSet;
+		const origArrowJdgY = g_diffObj.arrowJdgY;
+		const origFrzJdgY = g_diffObj.frzJdgY;
 
 		// 標準側は core が既に解析した内容をそのまま退避（一切改変しない）
 		const origImgTypeArr = g_headerObj.imgType;
@@ -186,8 +188,8 @@ g_customJsObj.preTitle.push(() => {
 				g_keycons.imgTypes = origImgTypeNames;
 
 				// 判定位置
-				g_diffObj.arrowJdgY = 0;
-				g_diffObj.frzJdgY = 0;
+				g_diffObj.arrowJdgY = origArrowJdgY;
+				g_diffObj.frzJdgY = origFrzJdgY;
 
 				if (g_imgType !== origImgTypeNames[0]) {
 					g_imgType = origImgTypeNames[0];
