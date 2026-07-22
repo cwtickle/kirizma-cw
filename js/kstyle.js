@@ -153,15 +153,6 @@ g_customJsObj.preTitle.push(() => {
 				g_diffObj.arrowJdgY = -10;
 				g_diffObj.frzJdgY = -50;
 
-				// キリズマクレジット
-				if (!g_headerObj.keyLists.every(isKirizmaKey)) {
-					multiAppend(divRoot,
-						createCss2Button(`lnkCreditK`, `Kirizma(cw) ${g_kirizmaVersion}`, _ => openLink(`https://github.com/cwtickle/kirizma-cw`), {
-							x: g_btnX(), y: 30, w: g_btnWidth(1 / 4), h: 20, siz: 12,
-						}, g_cssObj.button_Back),
-					);
-				}
-
 				if (g_imgType !== `kirizma`) {
 					g_imgType = `kirizma`;
 					g_stateObj.rotateEnabled = kirizmaImgTypeArr[0].rotateEnabled;
@@ -223,6 +214,17 @@ g_customJsObj.preTitle.push(() => {
 			if (isKirizmaKey(g_keyObj.prevKey) && !isKirizmaKey(g_keyObj.currentKey)) {
 				deleteDiv(divRoot, `lnkCreditK`);
 			}
+
+			// キリズマクレジット
+			if (isKirizmaKey(g_keyObj.currentKey) && !g_headerObj.keyLists.every(isKirizmaKey)) {
+				if (document.getElementById(`lnkCreditK`) === null) {
+					multiAppend(divRoot,
+						createCss2Button(`lnkCreditK`, `Kirizma(cw) ${g_kirizmaVersion}`, _ => openLink(`https://github.com/cwtickle/kirizma-cw`), {
+							x: g_btnX(), y: 30, w: g_btnWidth(1 / 4), h: 20, siz: 12,
+						}, g_cssObj.button_Back),
+					);
+				}
+			}
 		});
 
 		// ショートカット
@@ -236,7 +238,7 @@ g_customJsObj.preTitle.push(() => {
 			// キリズマ拡張クレジット
 			multiAppend(divRoot,
 				createCss2Button(`lnkCreditK`, `Kirizma(cw) ${g_kirizmaVersion}`, _ => openLink(`https://github.com/cwtickle/kirizma-cw`), {
-					x: g_sWidth - 175, y: 0, w: 175, h: 20, siz: 12, align: C_ALIGN_RIGHT,
+					x: g_btnWidth() + g_btnX() - 175, y: 0, w: 175, h: 20, siz: 12, align: C_ALIGN_RIGHT,
 				}, g_cssObj.button_Back),
 			);
 		});
@@ -245,7 +247,7 @@ g_customJsObj.preTitle.push(() => {
 		// - キリズマ(ローマ字モード)用にヘボン式の記法を他の記法に変換する設定を追加する（ディスプレイ切替ボタンを参考）
 		g_customJsObj.settingsDisplay.push(() => {
 			const keyCtrlPtn = `${g_keyObj.currentKey}_${g_keyObj.currentPtn}`;
-			if (g_keyObj.currentKey.endsWith(`k`) && g_keyObj[`color${keyCtrlPtn}`].length < 47) {
+			if (isKirizmaKey(g_keyObj.currentKey) && g_keyObj[`color${keyCtrlPtn}`].length < 47) {
 
 				const makeLocalButton = (_name, _widthPos, _heightPos = 0) => {
 					const flg = g_stateObj[_name];
@@ -288,7 +290,7 @@ g_customJsObj.preTitle.push(() => {
 		//   （g_keycons.imgTypes自体は書き換えないため、どちらの側にも副作用がない）
 		g_customJsObj.keyconfig.push(() => {
 
-			if (g_keyObj.currentKey.endsWith(`k`)) {
+			if (isKirizmaKey(g_keyObj.currentKey)) {
 				const keyCtrlPtn = `${g_keyObj.currentKey}_${g_keyObj.currentPtn}`;
 				const kirizmaNum = g_keyObj[`color${keyCtrlPtn}_0d`].filter(val => val === 0).length;
 				g_workObj.charFlg = `k${kirizmaNum}`;
@@ -308,7 +310,7 @@ g_customJsObj.preTitle.push(() => {
 		g_customJsObj.preloading.push(() => {
 			const keyCtrlPtn = `${g_keyObj.currentKey}_${g_keyObj.currentPtn}`;
 
-			if (g_keyObj.currentKey.endsWith(`k`) && g_keyObj[`color${keyCtrlPtn}`].length < 47 &&
+			if (isKirizmaKey(g_keyObj.currentKey) && g_keyObj[`color${keyCtrlPtn}`].length < 47 &&
 				g_stateObj.shuffle === C_FLG_OFF) {
 
 				const scoreIdH = setScoreIdHeader(g_stateObj.scoreId, g_stateObj.scoreLockFlg);
@@ -350,7 +352,7 @@ g_customJsObj.preTitle.push(() => {
 		// - キリズマ以外のデータが存在する場合の振り分け処理
 		g_customJsObj.loading.push(() => {
 
-			if (g_keyObj.currentKey.endsWith(`k`)) {
+			if (isKirizmaKey(g_keyObj.currentKey)) {
 				// 全てのレーン数 ＞ キリズマ側のレーン数なら矢印があると見做す
 				const keyNumMax = g_workObj.stepRtn.filter(val => __checkKirizmaCharacter(val)).length;
 
@@ -403,7 +405,7 @@ g_customJsObj.preTitle.push(() => {
 			g_workObj._arrowHeader = __compareVersions(g_version.slice(1), `45.0.0`) >= 0 ? `sub` : ``;
 
 			// キリズマのステップゾーンを移動する (キー数の末尾が'k'ならキリズマ系統と見做す)
-			if (g_keyObj.currentKey.endsWith(`k`)) {
+			if (isKirizmaKey(g_keyObj.currentKey)) {
 
 				// キリズマ側のステップゾーン位置
 				const pos = {
@@ -414,6 +416,14 @@ g_customJsObj.preTitle.push(() => {
 				const keyCtrlPtn = `${g_keyObj.currentKey}_${g_keyObj.currentPtn}`;
 				const kirizmaNum = g_keyObj[`color${keyCtrlPtn}_0d`].filter(val => val === 0).length;
 				g_workObj.charFlg = `k${kirizmaNum}`;
+
+				// g_sWidthがkirizma自身の設計幅より広い場合（panels等との混在時）の再センタリング補正
+				// -90度回転の前にY方向へ加算すると、回転後はX方向（符号そのまま）の補正として効く
+				const kirizmaDesignWidth = Math.max(
+					...g_headerObj.keyLists.filter(isKirizmaKey).map(key => g_keyObj[`minWidth${key}`])
+				);
+				const kirizmaOffsetX = (g_sWidth - kirizmaDesignWidth) / 2;
+				const kirizmaOffsetY = (g_sWidth - g_sHeight) / 2;
 
 				// mainSpriteを90度回転させて移動方向を変更
 				for (let j = 0; j < Math.min(g_stateObj.layerNum, 4); j++) {
@@ -433,9 +443,12 @@ g_customJsObj.preTitle.push(() => {
 						if (g_stateObj.playWindow.endsWith(`SideScroll`)) {
 							if (__compareVersions(g_version.slice(1), `45.0.0`) >= 0) {
 								addXY(`mainSprite${j}`, `kirizmaSc`, 0, -60, { priority: 0 });
+								addXY(`mainSprite${j}`, `kirizmaWidthFix`, 0, kirizmaOffsetY, { priority: 0 });
 							} else {
 								addXY(`mainSprite${j}`, `kirizmaSc`, 60, 0);
 							}
+						} else {
+							addXY(`mainSprite${j}`, `kirizmaWidthFix`, kirizmaOffsetX, 0, { priority: 0 });
 						}
 
 						if ([`2Step`, `Mismatched`, `R-Mismatched`].includes(g_stateObj.stepArea)
@@ -529,12 +542,12 @@ g_customJsObj.preTitle.push(() => {
 		// - 一度だけ登録し、内部で currentKey を判定する（main フックの中で毎回 push すると
 		//   リトライ・difficulty再選択のたびに登録が積み重なり、文字が重複表示されてしまうため）
 		g_customJsObj.makeArrow.push((_attrs, _arrowName, _name, _arrowCnt) => {
-			if (g_keyObj.currentKey.endsWith(`k`)) {
+			if (isKirizmaKey(g_keyObj.currentKey)) {
 				__setKirizmaChara(_attrs.pos, `${g_workObj._arrowHeader}${_arrowName}`);
 			}
 		});
 		g_customJsObj.makeFrzArrow.push((_attrs, _arrowName, _name, _arrowCnt) => {
-			if (g_keyObj.currentKey.endsWith(`k`)) {
+			if (isKirizmaKey(g_keyObj.currentKey)) {
 				__setKirizmaChara(_attrs.pos, `${_name}Top${_attrs.pos}_${_arrowCnt}`);
 			}
 		});
