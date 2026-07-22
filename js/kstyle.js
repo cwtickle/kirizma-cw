@@ -153,6 +153,15 @@ g_customJsObj.preTitle.push(() => {
 				g_diffObj.arrowJdgY = -10;
 				g_diffObj.frzJdgY = -50;
 
+				// キリズマクレジット
+				if (!g_headerObj.keyLists.every(isKirizmaKey)) {
+					multiAppend(divRoot,
+						createCss2Button(`lnkCreditK`, `Kirizma(cw) ${g_kirizmaVersion}`, _ => openLink(`https://github.com/cwtickle/kirizma-cw`), {
+							x: g_btnX(), y: 30, w: g_btnWidth(1 / 4), h: 20, siz: 12,
+						}, g_cssObj.button_Back),
+					);
+				}
+
 				if (g_imgType !== `kirizma`) {
 					g_imgType = `kirizma`;
 					g_stateObj.rotateEnabled = kirizmaImgTypeArr[0].rotateEnabled;
@@ -208,6 +217,11 @@ g_customJsObj.preTitle.push(() => {
 						updateImgType(origImgTypeArr[0]);
 					}
 				}
+			}
+
+			// キリズマで無くなった場合はクレジットを削除
+			if (isKirizmaKey(g_keyObj.prevKey) && !isKirizmaKey(g_keyObj.currentKey)) {
+				deleteDiv(divRoot, `lnkCreditK`);
 			}
 		});
 
