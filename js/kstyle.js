@@ -130,6 +130,8 @@ g_customJsObj.preTitle.push(() => {
 			C_IMG_C: `data:image/svg+xml,${encodeURIComponent('<svg id="frzbar" data-name="frzbar" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500"><rect width="500" height="500"/></svg>')}`,
 		};
 
+		const orgHashTag = g_headerObj.hashTag;
+
 		// 現在選択中のkeyLabelに応じて、移動量・機能可否・画像セットを都度切り替える
 		g_customJsObj.difficulty.push(() => {
 			if (!isKirizmaKey(g_keyObj.prevKey) && isKirizmaKey(g_keyObj.currentKey)) {
@@ -148,6 +150,14 @@ g_customJsObj.preTitle.push(() => {
 				// imgTypeの参照先自体をkirizma専用の定義に丸ごとスワップ
 				g_headerObj.imgType = kirizmaImgTypeArr;
 				g_keycons.imgTypes = kirizmaImgTypeNames;
+
+				if (hasVal(orgHashTag)) {
+					if (!orgHashTag.includes(`#kirizma`)) {
+						g_headerObj.hashTag = orgHashTag + ` #kirizma`;
+					}
+				} else {
+					g_headerObj.hashTag = `#kirizma`;
+				}
 
 				// 判定位置
 				g_diffObj.arrowJdgY = -10;
@@ -190,6 +200,12 @@ g_customJsObj.preTitle.push(() => {
 				// 判定位置
 				g_diffObj.arrowJdgY = origArrowJdgY;
 				g_diffObj.frzJdgY = origFrzJdgY;
+
+				if (hasVal(orgHashTag)) {
+					g_headerObj.hashTag = orgHashTag;
+				} else {
+					delete g_headerObj.hashTag;
+				}
 
 				if (g_imgType !== origImgTypeNames[0]) {
 					g_imgType = origImgTypeNames[0];
