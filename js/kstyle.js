@@ -105,8 +105,6 @@ g_customJsObj.preTitle.push(() => {
 		const origDistY = g_posObj.distY;
 		const origReverseStepY = g_posObj.reverseStepY;
 		const origArrowHeight = g_posObj.arrowHeight;
-		const origCamoufrageUse = g_headerObj.camoufrageUse;
-		const origSwappingUse = g_headerObj.swappingUse;
 		const origSpecialUse = g_headerObj.specialUse;
 		const origSpecialSet = g_headerObj.specialSet;
 		const origArrowJdgY = g_diffObj.arrowJdgY;
@@ -141,8 +139,6 @@ g_customJsObj.preTitle.push(() => {
 				g_posObj.arrowHeight = DIST_KIRIZMA + g_posObj.stepYR - g_posObj.stepDiffY * 2;
 
 				// キリズマで扱えない機能を無効化
-				g_headerObj.camoufrageUse = false;
-				g_headerObj.swappingUse = false;
 				g_headerObj.specialUse = true;
 				g_headerObj.specialSet = C_FLG_OFF;
 				g_stateObj.d_special = C_FLG_OFF;
@@ -187,8 +183,6 @@ g_customJsObj.preTitle.push(() => {
 				g_posObj.reverseStepY = origReverseStepY;
 				g_posObj.arrowHeight = origArrowHeight;
 
-				g_headerObj.camoufrageUse = origCamoufrageUse;
-				g_headerObj.swappingUse = origSwappingUse;
 				g_headerObj.specialUse = origSpecialUse;
 				g_headerObj.specialSet = origSpecialSet;
 				g_stateObj.d_special = origSpecialSet;
