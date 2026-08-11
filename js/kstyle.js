@@ -278,7 +278,7 @@ g_customJsObj.preTitle.push(() => {
 					}
 
 					optionsprite.appendChild(
-						makeSettingLblCssButton(`lnk${_name}`, _name.replace(`to`, ` > `), _heightPos, evt => switchDisplay(evt), {
+						makeSettingLblCssButton(`lnk${_name}`, _name.replace(`to`, ` -> `), _heightPos, evt => switchDisplay(evt), {
 							x: 50 + 75 * _widthPos, w: 70, y: 290,
 							title: ``, borderStyle: `solid`,
 							cxtFunc: evt => switchDisplay(evt),
