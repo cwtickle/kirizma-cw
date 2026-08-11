@@ -105,6 +105,7 @@ g_customJsObj.preTitle.push(() => {
 		const origDistY = g_posObj.distY;
 		const origReverseStepY = g_posObj.reverseStepY;
 		const origArrowHeight = g_posObj.arrowHeight;
+		const origCamoufrages = g_settings.camoufrages.concat();
 		const origSpecialUse = g_headerObj.specialUse;
 		const origSpecialSet = g_headerObj.specialSet;
 		const origArrowJdgY = g_diffObj.arrowJdgY;
@@ -139,6 +140,9 @@ g_customJsObj.preTitle.push(() => {
 				g_posObj.arrowHeight = DIST_KIRIZMA + g_posObj.stepYR - g_posObj.stepDiffY * 2;
 
 				// キリズマで扱えない機能を無効化
+				g_settings.camoufrages = [C_FLG_OFF];
+				g_settings.camoufrageNum = 0;
+				g_stateObj.camoufrage = C_FLG_OFF;
 				g_headerObj.specialUse = true;
 				g_headerObj.specialSet = C_FLG_OFF;
 				g_stateObj.d_special = C_FLG_OFF;
@@ -220,8 +224,9 @@ g_customJsObj.preTitle.push(() => {
 				}
 			}
 
-			// キリズマで無くなった場合はクレジットを削除
+			// キリズマで無くなった場合はクレジットを削除、Camoufrage設定を元に戻す
 			if (isKirizmaKey(g_keyObj.prevKey) && !isKirizmaKey(g_keyObj.currentKey)) {
+				g_settings.camoufrages = origCamoufrages.concat();
 				deleteDiv(divRoot, `lnkCreditK`);
 			}
 
