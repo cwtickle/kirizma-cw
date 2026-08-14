@@ -4,12 +4,12 @@
  * [for Kirizma]
  * 
  * Created: 2022/09/17
- * Revised: 2026/08/11
- * Source Version: Ver 3.0.3
+ * Revised: 2026/08/15
+ * Source Version: Ver 3.0.4
  * 
  * https://github.com/cwtickle/kirizma-cw
  */
-const g_kirizmaVersion = `Ver 3.0.3`;
+const g_kirizmaVersion = `Ver 3.0.4`;
 
 /**
  * タイトル画面前の割込み処理（初回譜面読込後）
