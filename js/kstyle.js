@@ -130,10 +130,13 @@ g_customJsObj.preTitle.push(() => {
 		};
 
 		const orgHashTag = g_headerObj.hashTag;
+		let hasKirizmaSetting = false;
 
 		// 現在選択中のkeyLabelに応じて、移動量・機能可否・画像セットを都度切り替える
 		g_customJsObj.difficulty.push(() => {
 			if (!isKirizmaKey(g_keyObj.prevKey) && isKirizmaKey(g_keyObj.currentKey)) {
+				hasKirizmaSetting = true;
+
 				// 移動量をキリズマ側に合わせる（スクロール見切れ対策）
 				g_posObj.distY = DIST_KIRIZMA - C_STEP_Y + g_posObj.stepYR;
 				g_posObj.reverseStepY = g_posObj.distY - g_posObj.stepY - g_posObj.stepDiffY - C_ARW_WIDTH;
@@ -181,12 +184,10 @@ g_customJsObj.preTitle.push(() => {
 						updateImgType(kirizmaImgTypeArr[0]);
 					}
 				}
-			} else if (isKirizmaKey(g_keyObj.prevKey) && isStandardKey(g_keyObj.currentKey)) {
-				// 通常keyLabel側は元の値に戻す
-				g_posObj.distY = origDistY;
-				g_posObj.reverseStepY = origReverseStepY;
-				g_posObj.arrowHeight = origArrowHeight;
+			} else if (hasKirizmaSetting && isStandardKey(g_keyObj.currentKey)) {
+				hasKirizmaSetting = false;
 
+				// 通常keyLabel側は元の値に戻す
 				g_headerObj.specialUse = origSpecialUse;
 				g_headerObj.specialSet = origSpecialSet;
 				g_stateObj.d_special = origSpecialSet;
@@ -226,6 +227,10 @@ g_customJsObj.preTitle.push(() => {
 
 			// キリズマで無くなった場合はクレジットを削除、Camoufrage設定を元に戻す
 			if (isKirizmaKey(g_keyObj.prevKey) && !isKirizmaKey(g_keyObj.currentKey)) {
+				g_posObj.distY = origDistY;
+				g_posObj.reverseStepY = origReverseStepY;
+				g_posObj.arrowHeight = origArrowHeight;
+
 				g_settings.camoufrages = origCamoufrages.concat();
 				deleteDiv(divRoot, `lnkCreditK`);
 			}
