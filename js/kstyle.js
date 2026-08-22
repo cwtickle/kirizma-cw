@@ -30,6 +30,10 @@ g_customJsObj.preTitle.push(() => {
 		(hasVal(g_rootObj.specialKey) ? g_rootObj.specialKey.split(`,`) : []).concat([`9t`]).includes(key);
 	const isStandardKey = key => !isPanelKey(key) && !isKirizmaKey(key) && !isSpecialKey(key);
 
+	// 入場検知及び離脱検知
+	const detectNewType = func => !func(g_keyObj.prevKey) && func(g_keyObj.currentKey);
+	const detectLeaveType = func => func(g_keyObj.prevKey) && !func(g_keyObj.currentKey);
+
 	if (g_headerObj.keyLists.some(isKirizmaKey)) {
 
 		// タイトルロゴは「全difficultyがkirizma系keyLabelの場合のみ」KIRIZMA表記にする
@@ -130,12 +134,10 @@ g_customJsObj.preTitle.push(() => {
 		};
 
 		const orgHashTag = g_headerObj.hashTag;
-		let hasKirizmaSetting = false;
 
 		// 現在選択中のkeyLabelに応じて、移動量・機能可否・画像セットを都度切り替える
 		g_customJsObj.difficulty.push(() => {
-			if (!isKirizmaKey(g_keyObj.prevKey) && isKirizmaKey(g_keyObj.currentKey)) {
-				hasKirizmaSetting = true;
+			if (detectNewType(isKirizmaKey)) {
 
 				// 移動量をキリズマ側に合わせる（スクロール見切れ対策）
 				g_posObj.distY = DIST_KIRIZMA - C_STEP_Y + g_posObj.stepYR;
@@ -184,8 +186,7 @@ g_customJsObj.preTitle.push(() => {
 						updateImgType(kirizmaImgTypeArr[0]);
 					}
 				}
-			} else if (hasKirizmaSetting && isStandardKey(g_keyObj.currentKey)) {
-				hasKirizmaSetting = false;
+			} else if (detectNewType(isStandardKey)) {
 
 				// 通常keyLabel側は元の値に戻す
 				g_headerObj.specialUse = origSpecialUse;
@@ -226,7 +227,7 @@ g_customJsObj.preTitle.push(() => {
 			}
 
 			// キリズマで無くなった場合はクレジットを削除、Camoufrage設定を元に戻す
-			if (isKirizmaKey(g_keyObj.prevKey) && !isKirizmaKey(g_keyObj.currentKey)) {
+			if (detectLeaveType(isKirizmaKey)) {
 				g_posObj.distY = origDistY;
 				g_posObj.reverseStepY = origReverseStepY;
 				g_posObj.arrowHeight = origArrowHeight;
