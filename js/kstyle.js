@@ -16,23 +16,12 @@ const g_kirizmaVersion = `Ver 3.0.5`;
  * 
  * - 埋め込み譜面はリロードしないため、キリズマ(ローマ字モード)の一部データを退避
  *   このタイミング以後だと譜面を元に戻せないため、このタイミングで行う必要がある
- * - 移動量をキリズマ側に合わせる（スクロール見切れ対策）
- * - 通常keyLabelとkirizma系keyLabelが混在するサイトでも共存できるよう、
- *   サイト全体に影響する設定はここで一括適用せず、difficultyフックで
- *   現在選択中のkeyLabelに応じて都度切り替える
+ * - 通常keyLabelや他系統(パンパネ等)と共存できるよう、サイト全体に影響する設定は
+ *   registerKeyFamily() に宣言し、現在選択中のkeyLabelに応じた自動切替を本体に任せる
  */
 g_customJsObj.preTitle.push(() => {
 
-	// 他系統(パンパネ等)と共存できるよう、「kirizma系以外」ではなく「本当に標準に戻った」場合だけ復元する
-	const isPanelKey = key => [`18p`, `36p`].includes(key);
 	const isKirizmaKey = key => key.endsWith(`k`);
-	const isSpecialKey = key =>
-		(hasVal(g_rootObj.specialKey) ? g_rootObj.specialKey.split(`,`) : []).concat([`9t`]).includes(key);
-	const isStandardKey = key => !isPanelKey(key) && !isKirizmaKey(key) && !isSpecialKey(key);
-
-	// 入場検知及び離脱検知
-	const detectNewType = func => !func(g_keyObj.prevKey) && func(g_keyObj.currentKey);
-	const detectLeaveType = func => func(g_keyObj.prevKey) && !func(g_keyObj.currentKey);
 
 	if (g_headerObj.keyLists.some(isKirizmaKey)) {
 
@@ -105,25 +94,10 @@ g_customJsObj.preTitle.push(() => {
 			keepList.forEach(val => g_rootObj[`${val}${scoreIdH}b_data`] = g_rootObj[`${val}${scoreIdH}_data`] || ``);
 		}
 
-		// 標準用／kirizma専用のimgType定義を分けて保持し、difficultyフックで丸ごとスワップする
-		const origDistY = g_posObj.distY;
-		const origReverseStepY = g_posObj.reverseStepY;
-		const origArrowHeight = g_posObj.arrowHeight;
-		const origCamoufrages = g_settings.camoufrages.concat();
-		const origSpecialUse = g_headerObj.specialUse;
-		const origSpecialSet = g_headerObj.specialSet;
-		const origArrowJdgY = g_diffObj.arrowJdgY;
-		const origFrzJdgY = g_diffObj.frzJdgY;
-
-		// 標準側は core が既に解析した内容をそのまま退避（一切改変しない）
-		const origImgTypeArr = g_headerObj.imgType;
-		const origImgTypeNames = g_keycons.imgTypes;
-
 		// kirizma専用の画像セットは core の解析ルートを一切通さず、ここだけで完結させる
 		const kirizmaImgTypeArr = [{
 			name: `kirizma`, extension: `svg`, rotateEnabled: true, flatStepHeight: 0, remoteDir: ``,
 		}];
-		const kirizmaImgTypeNames = [`kirizma`];
 
 		// file://実行時はupdateImgType()自体が無効化されているため、
 		// C_IMG_AASD / C_IMG_C だけ手動で差し替える（./js/lib/danoni_localbinary.js は標準版のまま使う）
@@ -135,27 +109,21 @@ g_customJsObj.preTitle.push(() => {
 
 		const orgHashTag = g_headerObj.hashTag;
 
-		// 現在選択中のkeyLabelに応じて、移動量・機能可否・画像セットを都度切り替える
-		g_customJsObj.difficulty.push(() => {
-			if (detectNewType(isKirizmaKey)) {
-
-				// 移動量をキリズマ側に合わせる（スクロール見切れ対策）
-				g_posObj.distY = DIST_KIRIZMA - C_STEP_Y + g_posObj.stepYR;
-				g_posObj.reverseStepY = g_posObj.distY - g_posObj.stepY - g_posObj.stepDiffY - C_ARW_WIDTH;
-				g_posObj.arrowHeight = DIST_KIRIZMA + g_posObj.stepYR - g_posObj.stepDiffY * 2;
-
-				// キリズマで扱えない機能を無効化
-				g_settings.camoufrages = [C_FLG_OFF];
-				g_settings.camoufrageNum = 0;
-				g_stateObj.camoufrage = C_FLG_OFF;
-				g_headerObj.specialUse = true;
-				g_headerObj.specialSet = C_FLG_OFF;
-				g_stateObj.d_special = C_FLG_OFF;
-
-				// imgTypeの参照先自体をkirizma専用の定義に丸ごとスワップ
-				g_headerObj.imgType = kirizmaImgTypeArr;
-				g_keycons.imgTypes = kirizmaImgTypeNames;
-
+		// 現在選択中のkeyLabelに応じて、移動量・機能可否・画像セット等を本体側で自動切替する
+		registerKeyFamily(`kirizma`, isKirizmaKey, {
+			'g_diffObj.arrowJdgY': -10,
+			'g_diffObj.frzJdgY': -50,
+			'g_posObj.distY': () => DIST_KIRIZMA - C_STEP_Y + g_posObj.stepYR,
+			'g_posObj.reverseStepY': () => g_posObj.distY - g_posObj.stepY - g_posObj.stepDiffY - C_ARW_WIDTH,
+			'g_posObj.arrowHeight': () => DIST_KIRIZMA + g_posObj.stepYR - g_posObj.stepDiffY * 2,
+			'g_headerObj.camoufrageUse': false,
+			'g_stateObj.camoufrage': C_FLG_OFF,
+			'g_headerObj.specialUse': true,
+			'g_headerObj.specialSet': C_FLG_OFF,
+			'g_stateObj.d_special': C_FLG_OFF,
+			'g_headerObj.imgType': kirizmaImgTypeArr,
+		}, {
+			onAcquire: () => {
 				if (hasVal(orgHashTag)) {
 					if (!orgHashTag.includes(`#kirizma`)) {
 						g_headerObj.hashTag = orgHashTag + ` #kirizma`;
@@ -164,88 +132,52 @@ g_customJsObj.preTitle.push(() => {
 					g_headerObj.hashTag = `#kirizma`;
 				}
 
-				// 判定位置
-				g_diffObj.arrowJdgY = -10;
-				g_diffObj.frzJdgY = -50;
-
-				if (g_imgType !== `kirizma`) {
-					g_imgType = `kirizma`;
-					g_stateObj.rotateEnabled = kirizmaImgTypeArr[0].rotateEnabled;
-					g_stateObj.flatStepHeight = kirizmaImgTypeArr[0].flatStepHeight;
-
-					if (g_isFile) {
-						// file://実行時: 差分のある2画像だけ手動で切替
-						C_IMG_AASD = kirizmaLocalImg.C_IMG_AASD;
-						C_IMG_C = kirizmaLocalImg.C_IMG_C;
-						g_imgObj.cShadow = C_IMG_AASD;
-						g_imgObj.c = C_IMG_C;
-						g_imgObj.cStep = C_IMG_C;
-						g_imgObj.cShadowStep = C_IMG_AASD;
-						g_imgObj.cStepHit = C_IMG_C;
-					} else {
-						updateImgType(kirizmaImgTypeArr[0]);
-					}
-				}
-			} else if (detectNewType(isStandardKey)) {
-
-				// 通常keyLabel側は元の値に戻す
-				g_headerObj.specialUse = origSpecialUse;
-				g_headerObj.specialSet = origSpecialSet;
-				g_stateObj.d_special = origSpecialSet;
-
-				// imgTypeの参照先を標準用の定義に丸ごと戻す
-				g_headerObj.imgType = origImgTypeArr;
-				g_keycons.imgTypes = origImgTypeNames;
-
-				// 判定位置
-				g_diffObj.arrowJdgY = origArrowJdgY;
-				g_diffObj.frzJdgY = origFrzJdgY;
-
-				if (hasVal(orgHashTag)) {
-					g_headerObj.hashTag = orgHashTag;
-				} else {
-					delete g_headerObj.hashTag;
-				}
-
-				if (g_imgType !== origImgTypeNames[0]) {
-					g_imgType = origImgTypeNames[0];
-					g_stateObj.rotateEnabled = origImgTypeArr[0].rotateEnabled;
-					g_stateObj.flatStepHeight = origImgTypeArr[0].flatStepHeight;
-
-					if (g_isFile) {
-						C_IMG_AASD = origLocalImg.C_IMG_AASD;
-						C_IMG_C = origLocalImg.C_IMG_C;
-						g_imgObj.cShadow = C_IMG_AASD;
-						g_imgObj.c = C_IMG_C;
-						g_imgObj.cStep = C_IMG_C;
-						g_imgObj.cShadowStep = C_IMG_AASD;
-						g_imgObj.cStepHit = C_IMG_C;
-					} else {
-						updateImgType(origImgTypeArr[0]);
-					}
-				}
-			}
-
-			// キリズマで無くなった場合はクレジットを削除、Camoufrage設定を元に戻す
-			if (detectLeaveType(isKirizmaKey)) {
-				g_posObj.distY = origDistY;
-				g_posObj.reverseStepY = origReverseStepY;
-				g_posObj.arrowHeight = origArrowHeight;
-
-				g_settings.camoufrages = origCamoufrages.concat();
-				deleteDiv(divRoot, `lnkCreditK`);
-			}
-
-			// キリズマクレジット
-			if (isKirizmaKey(g_keyObj.currentKey) && !g_headerObj.keyLists.every(isKirizmaKey)) {
-				if (document.getElementById(`lnkCreditK`) === null) {
+				// キリズマクレジット
+				if (!g_headerObj.keyLists.every(isKirizmaKey) && document.getElementById(`lnkCreditK`) === null) {
 					multiAppend(divRoot,
 						createCss2Button(`lnkCreditK`, `Kirizma(cw) ${g_kirizmaVersion}`, _ => openLink(`https://github.com/cwtickle/kirizma-cw`), {
 							x: g_btnX(), y: 30, w: g_btnWidth(1 / 4), h: 20, siz: 12,
 						}, g_cssObj.button_Back),
 					);
 				}
-			}
+			},
+			onRelease: () => {
+				if (hasVal(orgHashTag)) {
+					g_headerObj.hashTag = orgHashTag;
+				} else {
+					delete g_headerObj.hashTag;
+				}
+
+				deleteDiv(divRoot, `lnkCreditK`);
+			},
+		}, {
+			// imgTypeは g_headerObj.imgType の1箇所だけをエンジンに管理させ、
+			// g_keycons.imgTypes はそこから毎回導出する（core の headerConvert と同じ導出ロジック）
+			'g_headerObj.imgType': imgTypeArr => {
+				g_headerObj.imgType = imgTypeArr;
+				g_keycons.imgTypes = imgTypeArr.map(t => t.name === `` ? `Original` : t.name);
+
+				const newImgTypeName = imgTypeArr[0].name === `` ? `Original` : imgTypeArr[0].name;
+				if (g_imgType !== newImgTypeName) {
+					g_imgType = newImgTypeName;
+					g_stateObj.rotateEnabled = imgTypeArr[0].rotateEnabled;
+					g_stateObj.flatStepHeight = imgTypeArr[0].flatStepHeight;
+
+					if (g_isFile) {
+						// file://実行時: 差分のある2画像だけ手動で切替
+						const localImg = imgTypeArr === kirizmaImgTypeArr ? kirizmaLocalImg : origLocalImg;
+						C_IMG_AASD = localImg.C_IMG_AASD;
+						C_IMG_C = localImg.C_IMG_C;
+						g_imgObj.cShadow = C_IMG_AASD;
+						g_imgObj.c = C_IMG_C;
+						g_imgObj.cStep = C_IMG_C;
+						g_imgObj.cShadowStep = C_IMG_AASD;
+						g_imgObj.cStepHit = C_IMG_C;
+					} else {
+						updateImgType(imgTypeArr[0]);
+					}
+				}
+			},
 		});
 
 		// ショートカット
@@ -306,9 +238,8 @@ g_customJsObj.preTitle.push(() => {
 
 		// キーコンフィグ画面の割込み処理
 		// - キーコンフィグ画面上のキリズマ用文字表示 (Source by SKB, suzme)
-		// - kirizma系keyLabel: ImgTypeボタンを非表示にし、kirizma固定で運用する
-		// - 通常keyLabel: ImgTypeボタンは残すが、選択肢からkirizmaだけ除外して循環させる
-		//   （g_keycons.imgTypes自体は書き換えないため、どちらの側にも副作用がない）
+		// - ImgType切替ボタンの表示/非表示は、registerKeyFamilyによる
+		//   g_headerObj.imgType の丸ごとスワップに伴い core 側が自動判定する
 		g_customJsObj.keyconfig.push(() => {
 
 			if (isKirizmaKey(g_keyObj.currentKey)) {
@@ -403,27 +334,7 @@ g_customJsObj.preTitle.push(() => {
 		 */
 		g_customJsObj.main.push(() => {
 
-			// バージョン比較処理 (x.y.z-a1形式)
-			const __compareVersions = (versionA, versionB) => {
-				const partsA = versionA.split('-').join('.').split('.').map(j => parseInt(j, 36));
-				const partsB = versionB.split('-').join('.').split('.').map(j => parseInt(j, 36));
-				const maxLen = Math.max(partsA.length, partsB.length);
-
-				for (let i = 0; i < maxLen; i++) {
-					partsA[i] = partsA[i] || 0;
-					partsB[i] = partsB[i] || 0;
-
-					if (partsA[i] < partsB[i]) {
-						return -1; // versionA is older
-					} else if (partsA[i] > partsB[i]) {
-						return 1; // versionA is newer
-					}
-				}
-				return 0; // versionA and versionB are equal
-			};
-
-			// v45以降はEffectを掛ける対象が異なるため、分岐
-			g_workObj._arrowHeader = __compareVersions(g_version.slice(1), `45.0.0`) >= 0 ? `sub` : ``;
+			g_workObj._arrowHeader = `sub`;
 
 			// キリズマのステップゾーンを移動する (キー数の末尾が'k'ならキリズマ系統と見做す)
 			if (isKirizmaKey(g_keyObj.currentKey)) {
@@ -448,99 +359,78 @@ g_customJsObj.preTitle.push(() => {
 
 				// mainSpriteを90度回転させて移動方向を変更
 				for (let j = 0; j < Math.min(g_stateObj.layerNum, 4); j++) {
-					if (typeof addTransform === C_TYP_FUNCTION) {
-						addTransform(`mainSprite${j}`, `kirizma`, `rotate(-90deg)`, { priority: 0 });
+					addTransform(`mainSprite${j}`, `kirizma`, `rotate(-90deg)`, { priority: 0 });
+					addXY(`mainSprite${j}`, `kirizma`, 180, 0, { priority: 0 });
+
+					// SideScrollの場合は縦横が反転するため、ウィンドウの高さにより位置を調整
+					if (g_stateObj.playWindow.endsWith(`SideScroll`)) {
+						addXY(`mainSprite${j}`, `kirizmaSc`, 0, -60, { priority: 0 });
+						addXY(`mainSprite${j}`, `kirizmaWidthFix`, 0, kirizmaOffsetY, { priority: 0 });
 					} else {
-						$id(`mainSprite${j}`).transform = `rotate(-90deg)`;
+						addXY(`mainSprite${j}`, `kirizmaWidthFix`, kirizmaOffsetX, 0, { priority: 0 });
 					}
-					if (typeof addXY === C_TYP_FUNCTION) {
-						if (__compareVersions(g_version.slice(1), `45.0.0`) >= 0) {
-							addXY(`mainSprite${j}`, `kirizma`, 180, 0, { priority: 0 });
-						} else {
-							addXY(`mainSprite${j}`, `kirizma`, 0, -180);
-						}
 
-						// SideScrollの場合は縦横が反転するため、ウィンドウの高さにより位置を調整
-						if (g_stateObj.playWindow.endsWith(`SideScroll`)) {
-							if (__compareVersions(g_version.slice(1), `45.0.0`) >= 0) {
-								addXY(`mainSprite${j}`, `kirizmaSc`, 0, -60, { priority: 0 });
-								addXY(`mainSprite${j}`, `kirizmaWidthFix`, 0, kirizmaOffsetY, { priority: 0 });
-							} else {
-								addXY(`mainSprite${j}`, `kirizmaSc`, 60, 0);
-							}
-						} else {
-							addXY(`mainSprite${j}`, `kirizmaWidthFix`, kirizmaOffsetX, 0, { priority: 0 });
-						}
+					if ([`2Step`, `Mismatched`, `R-Mismatched`].includes(g_stateObj.stepArea)
+						&& j >= Math.min(g_stateObj.layerNum, 4) / 2) {
+						// 下記の設定の場合、ステップゾーンが同じ位置にあり打ちにくいため、座標を調整
+						const deltaX = C_ARW_WIDTH * 3 * Number(g_stateObj.reverse === C_FLG_ON ? 1 : -1);
+						addXY(`stepSprite${j}`, `kirizma`, deltaX, 0);
+						addXY(`arrowSprite${j}`, `kirizma`, deltaX, 0);
+						addXY(`frzHitSprite${j}`, `kirizma`, deltaX, 0);
 
-						if ([`2Step`, `Mismatched`, `R-Mismatched`].includes(g_stateObj.stepArea)
-							&& j >= Math.min(g_stateObj.layerNum, 4) / 2) {
-							// 下記の設定の場合、ステップゾーンが同じ位置にあり打ちにくいため、座標を調整
-							const deltaX = C_ARW_WIDTH * 3 * Number(g_stateObj.reverse === C_FLG_ON ? 1 : -1);
-							addXY(`stepSprite${j}`, `kirizma`, deltaX, 0);
-							addXY(`arrowSprite${j}`, `kirizma`, deltaX, 0);
-							addXY(`frzHitSprite${j}`, `kirizma`, deltaX, 0);
+						if (g_appearanceRanges.includes(g_stateObj.appearance)) {
+							// Hidden+, Sudden+の場合はレイヤー毎に座標を画面中央から見てフィルターバーを外側へシフト
+							addTransform(
+								`filterBar${j}`, `kirizmaX`,
+								`translateX(calc(${g_hidSudObj[g_stateObj.appearance] === 0 ? 1 : -1} * ${deltaX}px))`,
+								g_transPriority.stepArea
+							);
 
-							if (__compareVersions(g_version.slice(1), `45.0.0`) >= 0 && g_appearanceRanges.includes(g_stateObj.appearance)) {
-								// Hidden+, Sudden+の場合はレイヤー毎に座標を画面中央から見てフィルターバーを外側へシフト
+							// Hid&Sud+の場合は片側に2つのフィルターバーが必要なため、
+							// 追加したフィルターバーを元のフィルターバーに対して反転するようにシフト
+							if (g_stateObj.appearance === `Hid&Sud+`) {
 								addTransform(
-									`filterBar${j}`, `kirizmaX`,
-									`translateX(calc(${g_hidSudObj[g_stateObj.appearance] === 0 ? 1 : -1} * ${deltaX}px))`,
+									`filterBar${j}_HS`, `kirizmaX`,
+									`translateX(calc(${(-1) * (g_hidSudObj[g_stateObj.appearance] === 0 ? 1 : -1)} * ${deltaX}px))`,
 									g_transPriority.stepArea
 								);
-
-								// Hid&Sud+の場合は片側に2つのフィルターバーが必要なため、
-								// 追加したフィルターバーを元のフィルターバーに対して反転するようにシフト
-								if (g_stateObj.appearance === `Hid&Sud+`) {
-									addTransform(
-										`filterBar${j}_HS`, `kirizmaX`,
-										`translateX(calc(${(-1) * (g_hidSudObj[g_stateObj.appearance] === 0 ? 1 : -1)} * ${deltaX}px))`,
-										g_transPriority.stepArea
-									);
-								}
-							}
-
-						} else if (g_stateObj.stepArea === `Halfway`) {
-							// 移動距離を変えているため、Halfwayの場合も位置を調整
-							const deltaY = (j % 2 === 0 ? 1 : -1) * (DIST_KIRIZMA - g_headerObj.playingHeight) / 2;
-							addXY(`stepSprite${j}`, `kirizma`, 0, deltaY);
-							addXY(`arrowSprite${j}`, `kirizma`, 0, deltaY);
-							addXY(`frzHitSprite${j}`, `kirizma`, 0, deltaY);
-
-							if (__compareVersions(g_version.slice(1), `45.0.0`) >= 0 && g_appearanceRanges.includes(g_stateObj.appearance)) {
-								// Hidden+, Sudden+の場合はレイヤー毎に座標を画面中央から見てフィルターバーを外側へシフト
-								addTransform(
-									`filterBar${j}`, `kirizmaY`,
-									`translateY(calc(${g_hidSudObj[g_stateObj.appearance] === 0 ? 1 : -1} * ${deltaY}px))`,
-									g_transPriority.stepArea
-								);
-
-								// Hid&Sud+の場合は片側に2つのフィルターバーが必要なため、
-								// 追加したフィルターバーを元のフィルターバーに対して反転するようにシフト
-								if (g_stateObj.appearance === `Hid&Sud+`) {
-									addTransform(
-										`filterBar${j}_HS`, `kirizmaY`,
-										`translateY(calc(${(-1) * (g_hidSudObj[g_stateObj.appearance] === 0 ? 1 : -1)} * ${deltaY}px))`,
-										g_transPriority.stepArea
-									);
-								}
 							}
 						}
-					} else {
-						$id(`mainSprite${j}`).left = `0px`;
-						$id(`mainSprite${j}`).top = `-180px`;
+
+					} else if (g_stateObj.stepArea === `Halfway`) {
+						// 移動距離を変えているため、Halfwayの場合も位置を調整
+						const deltaY = (j % 2 === 0 ? 1 : -1) * (DIST_KIRIZMA - g_headerObj.playingHeight) / 2;
+						addXY(`stepSprite${j}`, `kirizma`, 0, deltaY);
+						addXY(`arrowSprite${j}`, `kirizma`, 0, deltaY);
+						addXY(`frzHitSprite${j}`, `kirizma`, 0, deltaY);
+
+						if (g_appearanceRanges.includes(g_stateObj.appearance)) {
+							// Hidden+, Sudden+の場合はレイヤー毎に座標を画面中央から見てフィルターバーを外側へシフト
+							addTransform(
+								`filterBar${j}`, `kirizmaY`,
+								`translateY(calc(${g_hidSudObj[g_stateObj.appearance] === 0 ? 1 : -1} * ${deltaY}px))`,
+								g_transPriority.stepArea
+							);
+
+							// Hid&Sud+の場合は片側に2つのフィルターバーが必要なため、
+							// 追加したフィルターバーを元のフィルターバーに対して反転するようにシフト
+							if (g_stateObj.appearance === `Hid&Sud+`) {
+								addTransform(
+									`filterBar${j}_HS`, `kirizmaY`,
+									`translateY(calc(${(-1) * (g_hidSudObj[g_stateObj.appearance] === 0 ? 1 : -1)} * ${deltaY}px))`,
+									g_transPriority.stepArea
+								);
+							}
+						}
 					}
 				}
 
 				// キリズマは通常より長いスクロール長のため、
 				// ダンおにが使うReverseに合わせて位置を調整
 				if (g_stateObj.layerNum > 4) {
-					if (typeof addXY === C_TYP_FUNCTION) {
-						addXY(`mainSprite${g_stateObj._danoniRvLayer}`, `kirizma`, 0, g_headerObj.playingHeight - DIST_KIRIZMA);
-						if ((g_hidSudObj[g_stateObj.appearance] + 1) % 2 === 0) {
-							addXY(`filterBar${4 + (g_hidSudObj[g_stateObj.appearance] + 1) % 2}`, `kirizma`, 0, g_headerObj.playingHeight - DIST_KIRIZMA);
-						}
-					} else {
-						$id(`mainSprite${g_stateObj._danoniRvLayer}`).top = `${g_headerObj.playingHeight - DIST_KIRIZMA}px`;
+					addXY(`mainSprite${g_stateObj._danoniRvLayer}`, `kirizma`, 0, g_headerObj.playingHeight - DIST_KIRIZMA);
+					if ((g_hidSudObj[g_stateObj.appearance] + 1) % 2 === 0) {
+						addXY(`filterBar${4 + (g_hidSudObj[g_stateObj.appearance] + 1) % 2}`, `kirizma`, 0, g_headerObj.playingHeight - DIST_KIRIZMA);
 					}
 				}
 
@@ -558,6 +448,7 @@ g_customJsObj.preTitle.push(() => {
 				}
 			}
 		});
+
 
 		// アロー生成時の割込み処理
 		// - 一度だけ登録し、内部で currentKey を判定する（main フックの中で毎回 push すると
